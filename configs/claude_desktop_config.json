@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "second-brain": {
+      "command": "python",
+      "args": [
+        "<PATH_TO_SECOND_BRAIN>/scripts/mcp_server.py"
+      ]
+    }
+  }
+}

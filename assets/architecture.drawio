@@ -1,0 +1,158 @@
+<mxfile host="Electron" agent="2ndBrain">
+  <diagram id="cognitive-arch" name="2ndBrain Cognitive Architecture">
+    <mxGraphModel dx="2648" dy="1974" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="#0b0f19" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="e_ast_llm" edge="1" parent="1" source="engine_ast" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=1.5;curved=0;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.4;entryY=0;" target="llm_node">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="171" y="632" />
+              <mxPoint x="171" y="648" />
+              <mxPoint x="450" y="648" />
+              <mxPoint x="450" y="718" />
+              <mxPoint x="630" y="718" />
+              <mxPoint x="630" y="744" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_graphify_llm" edge="1" parent="1" source="engine_graphify" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d97706;strokeWidth=1.5;curved=0;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.6;entryY=0;" target="llm_node">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="461" y="632" />
+              <mxPoint x="461" y="708" />
+              <mxPoint x="688" y="708" />
+              <mxPoint x="688" y="744" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_vault_llm" edge="1" parent="1" source="engine_vault" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e11d48;strokeWidth=1.5;curved=0;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.8;entryY=0;" target="llm_node">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="751" y="632" />
+              <mxPoint x="751" y="648" />
+              <mxPoint x="746" y="648" />
+              <mxPoint x="746" y="744" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_mem_llm" edge="1" parent="1" source="memory_check" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#a78bfa;strokeWidth=1.5;dashed=1;fontColor=#c4b5fd;fontSize=10;curved=0;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.2;entryY=0;labelBackgroundColor=none;" target="llm_node" value="&lt;span&gt;Grounding Constraint Rules&lt;/span&gt;">
+          <mxGeometry relative="1" x="-0.2189" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="300" y="375" />
+              <mxPoint x="300" y="391" />
+              <mxPoint x="-63.5" y="391" />
+              <mxPoint x="-63.5" y="728" />
+              <mxPoint x="572" y="728" />
+              <mxPoint x="572" y="744" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_feedback" edge="1" parent="1" source="distill_node" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#f43f5e;strokeWidth=2;dashed=1;fontColor=#fda4af;fontSize=10;curved=0;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.6667;entryY=0;labelBackgroundColor=none;" target="engine_vault" value="Crystallizes new atomic note into Obsidian [[04-Agent-Memory]]">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint y="-129.16" as="offset" />
+            <Array as="points">
+              <mxPoint x="659" y="1032" />
+              <mxPoint x="659" y="1048" />
+              <mxPoint x="901" y="1048" />
+              <mxPoint x="901" y="461" />
+              <mxPoint x="794.33" y="461" />
+              <mxPoint x="794.33" y="477" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_route_ast" edge="1" parent="1" source="triage" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=1.5;fontColor=#6ee7b7;fontSize=10;curved=0;edgeStyle=orthogonalEdgeStyle;exitX=0.4;exitY=1;entryX=0.5;entryY=0;labelBackgroundColor=none;" target="engine_ast" value="AST / Call Graph">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-229" y="30" as="offset" />
+            <Array as="points">
+              <mxPoint x="356" y="221" />
+              <mxPoint x="450" y="221" />
+              <mxPoint x="450" y="401" />
+              <mxPoint x="171" y="401" />
+              <mxPoint x="171" y="477" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_route_graphify" edge="1" parent="1" source="triage" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d97706;strokeWidth=1.5;fontColor=#fde68a;fontSize=10;curved=0;edgeStyle=orthogonalEdgeStyle;exitX=0.6;exitY=1;entryX=0.5;entryY=0;labelBackgroundColor=none;" target="engine_graphify" value="Architecture / Concepts">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint y="97" as="offset" />
+            <Array as="points">
+              <mxPoint x="412" y="211" />
+              <mxPoint x="461" y="211" />
+              <mxPoint x="461" y="477" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_route_vault" edge="1" parent="1" source="triage" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e11d48;strokeWidth=1.5;fontColor=#fda4af;fontSize=10;curved=0;edgeStyle=orthogonalEdgeStyle;exitX=0.8;exitY=1;entryX=0.3333;entryY=0;labelBackgroundColor=none;" target="engine_vault" value="Decisions / Specs">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="152.33" y="40" as="offset" />
+            <Array as="points">
+              <mxPoint x="468" y="211" />
+              <mxPoint x="472" y="211" />
+              <mxPoint x="472" y="391" />
+              <mxPoint x="707.67" y="391" />
+              <mxPoint x="707.67" y="477" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="user" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#6366f1;strokeWidth=2;fontColor=#ffffff;arcSize=24;shadow=1;" value="&lt;b style=&#39;font-size: 15px;&#39;&gt;User Prompt / Query&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;color: #818cf8; font-family: monospace;&#39;&gt;@2ndBrain &amp;lt;prompt&amp;gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry height="60" width="320" as="geometry" />
+        </mxCell>
+        <mxCell id="l0_group" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#38bdf8;strokeWidth=1.5;fontColor=#38bdf8;fontStyle=1;fontSize=13;startSize=30;rounded=1;arcSize=10;dashed=1;" value="Layer 0: System 1 Fast Reflex (Laya - ModernBERT-large 421M, &amp;lt;35ms)" vertex="1">
+          <mxGeometry height="280" width="384" x="150" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="triage" parent="l0_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style=&#39;font-size: 14px; color: #38bdf8;&#39;&gt;Neural Query Triage&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;color: #94a3b8; font-size: 11px;&#39;&gt;Typed Choice Question Schema&lt;br&gt;Parallel Single Forward Pass&lt;/span&gt;" vertex="1">
+          <mxGeometry height="65" width="280" x="94" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="memory_check" parent="l0_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#8b5cf6;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style=&#39;font-size: 14px; color: #a78bfa;&#39;&gt;Active Memory Recall&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;color: #94a3b8; font-size: 11px;&#39;&gt;Recalls Active Rules &amp;amp; Sessions&lt;br&gt;&lt;code style=&#39;color: #c4b5fd;&#39;&gt;04-Agent-Memory (Corrections &amp;amp; Sessions)&lt;/code&gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry height="65" width="280" x="10" y="205" as="geometry" />
+        </mxCell>
+        <mxCell id="e_triage_mem" edge="1" parent="l0_group" source="triage" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#a78bfa;strokeWidth=1.5;dashed=1;fontColor=#cbd5e1;fontSize=10;curved=0;edgeStyle=orthogonalEdgeStyle;exitX=0.2;exitY=1;entryX=0.5;entryY=0;labelBackgroundColor=none;" target="memory_check" value="Filter &amp;amp; Scan">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint y="6" as="offset" />
+            <Array as="points">
+              <mxPoint x="150" y="155" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_user_triage" edge="1" parent="1" source="user" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6366f1;strokeWidth=2;fontColor=#ffffff;curved=0;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.026;entryY=0;" target="l0_group">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="160" y="75" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="engines_group" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#10b981;strokeWidth=1.5;fontColor=#34d399;fontStyle=1;fontSize=13;startSize=30;rounded=1;arcSize=10;" value="Layers 1 to 4: Multi-Engine Knowledge Stack (System 2 Grounding)" vertex="1">
+          <mxGeometry height="145" width="860" x="31" y="482" as="geometry" />
+        </mxCell>
+        <mxCell id="engine_ast" parent="engines_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#059669;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style=&#39;font-size: 14px; color: #34d399;&#39;&gt;L1: Code-Review-Graph&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;color: #94a3b8; font-size: 11px;&#39;&gt;Tree-sitter AST &amp;amp; SQLite&lt;br&gt;Callers, Callees &amp;amp; Blast Radius&lt;br&gt;&lt;i style=&#39;color: #6ee7b7;&#39;&gt;Zero Hallucination Code Graph&lt;/i&gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry height="95" width="260" x="10" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="engine_graphify" parent="engines_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#d97706;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style=&#39;font-size: 14px; color: #fbbf24;&#39;&gt;L2: Graphify (GraphRAG)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;color: #94a3b8; font-size: 11px;&#39;&gt;Leiden &amp;amp; Louvain Community Detection&lt;br&gt;Architecture Clusters &amp;amp; God Nodes&lt;br&gt;&lt;i style=&#39;color: #fde68a;&#39;&gt;Cross-Document Concepts&lt;/i&gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry height="95" width="260" x="300" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="engine_vault" parent="engines_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#e11d48;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style=&#39;font-size: 14px; color: #f43f5e;&#39;&gt;L3/L4: Obsidian &amp;amp; Parent-Child Search&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;color: #94a3b8; font-size: 11px;&#39;&gt;Hierarchical Dense (384-d) + BM25 RRF&lt;br&gt;Table &amp;amp; Equation Preservation&lt;br&gt;&lt;i style=&#39;color: #fda4af;&#39;&gt;Bi-directional wikilinks &amp;amp; Rich Context&lt;/i&gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry height="95" width="260" x="590" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="synth_group" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#8b5cf6;strokeWidth=1.5;fontColor=#c4b5fd;fontStyle=1;fontSize=13;startSize=30;rounded=1;arcSize=10;" value="Layer 5: Generative Synthesis &amp;amp; Continuous Learning Lifecycle" vertex="1">
+          <mxGeometry height="278" width="310" x="504" y="749" as="geometry" />
+        </mxCell>
+        <mxCell id="llm_node" parent="synth_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#7c3aed;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style=&#39;font-size: 14px; color: #a78bfa;&#39;&gt;Grounded LLM Generation&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;color: #94a3b8; font-size: 11px;&#39;&gt;Claude / Cursor / Antigravity / OpenAI&lt;br&gt;&lt;i style=&#39;color: #c4b5fd;&#39;&gt;Verified Context + Active Rule Adherence&lt;/i&gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry height="70" width="290" x="10" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="distill_node" parent="synth_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style=&#39;font-size: 14px; color: #38bdf8;&#39;&gt;Memory Distiller &amp;amp; Sleep Cycle&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;color: #94a3b8; font-size: 11px;&#39;&gt;Session Archival &amp;amp; Consolidation&lt;br&gt;Decay, Reinforce, Supersede &amp;amp; Promote&lt;/span&gt;" vertex="1">
+          <mxGeometry height="70" width="290" x="10" y="198" as="geometry" />
+        </mxCell>
+        <mxCell id="e_llm_distill" edge="1" parent="synth_group" source="llm_node" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#38bdf8;strokeWidth=1.5;fontColor=#7dd3fc;fontSize=10;curved=0;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.5;entryY=0;labelBackgroundColor=none;" target="distill_node" value="Turn Distillation">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="155" y="154" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,81 @@
+<mxfile host="Electron" agent="2ndBrain">
+  <diagram id="knowledge-pipeline" name="2ndBrain Knowledge Pipeline">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" background="#0b0f19" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Header -->
+        <mxCell id="hdr" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#38bdf8;fontStyle=1;fontSize=18;" value="2ndBrain: Knowledge Ingestion, Synthesis &amp; Memory Lifecycle" vertex="1">
+          <mxGeometry x="300" y="20" width="600" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Inputs -->
+        <mxCell id="in_raw" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#6366f1;strokeWidth=2;fontColor=#ffffff;arcSize=24;" value="&lt;b style='font-size: 14px; color: #818cf8;'&gt;Raw Unstructured Materials&lt;/b&gt;&lt;br&gt;&lt;span style='color: #cbd5e1; font-size: 11px;'&gt;PDFs, Scanned Docs, Tables, Equations, Markdown, Code&lt;/span&gt;" vertex="1">
+          <mxGeometry x="170" y="65" width="340" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="in_turns" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#8b5cf6;strokeWidth=2;fontColor=#ffffff;arcSize=24;" value="&lt;b style='font-size: 14px; color: #a78bfa;'&gt;Live Conversation &amp; Interactions&lt;/b&gt;&lt;br&gt;&lt;span style='color: #cbd5e1; font-size: 11px;'&gt;User Corrections, Q&amp;A Dialogues, Architectural Debates&lt;/span&gt;" vertex="1">
+          <mxGeometry x="780" y="65" width="340" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Stages 1 to 3 -->
+        <mxCell id="s1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='font-size: 14px; color: #38bdf8;'&gt;1. Multi-Modal Ingestion Engine&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 11px;'&gt;pdfplumber + Neural RapidOCR Engine&lt;br&gt;&lt;code style='color: #7dd3fc;'&gt;Table Extraction (| Col | Col |) &amp; LaTeX Math ($$...$$)&lt;/code&gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry x="170" y="145" width="340" height="65" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#059669;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='font-size: 14px; color: #34d399;'&gt;2. Structure &amp; Note Synthesis&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 11px;'&gt;01-Concepts/ (Modular, Atomic Concept Notes)&lt;br&gt;03-Sources/ (Immutable Reference Documents)&lt;/span&gt;" vertex="1">
+          <mxGeometry x="170" y="240" width="340" height="65" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#10b981;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='font-size: 14px; color: #10b981;'&gt;3. Bidirectional Wikilink Synthesis&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 11px;'&gt;Discovers concepts &amp; weaves [[wikilinks]] graph&lt;br&gt;&lt;code style='color: #a7f3d0;'&gt;Registers all concepts into 00-Meta/Index.md MOC&lt;/code&gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry x="170" y="335" width="340" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- Stages 4 & 5 (Branch) -->
+        <mxCell id="s4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#e11d48;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='font-size: 14px; color: #f43f5e;'&gt;4. Parent-Child Hierarchical Search&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 11px;'&gt;Decomposes Parent Sections (H1-H4)&lt;br&gt;Child Chunks (~350 chars) + Doc Prefix&lt;br&gt;&lt;code style='color: #fda4af;'&gt;Fastembed 384-d + SQLite BM25 RRF&lt;/code&gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry x="60" y="435" width="265" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#d97706;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='font-size: 14px; color: #fbbf24;'&gt;5. Code Structure &amp; GraphRAG&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 11px;'&gt;Tree-sitter AST (Callers / Callees / Blast)&lt;br&gt;Graphify Leiden Community Detection&lt;br&gt;&lt;i style='color: #fde68a;'&gt;God-Nodes &amp; Module Boundaries&lt;/i&gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry x="355" y="435" width="265" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Stages 6 & 7 (Conversational Memory) -->
+        <mxCell id="s6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#8b5cf6;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='font-size: 14px; color: #a78bfa;'&gt;6. Conversational Memory &amp; Sessions&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 11px;'&gt;Laya Neural Triage (P &gt;= 0.70 durable constraints)&lt;br&gt;&lt;code style='color: #c4b5fd;'&gt;04-Agent-Memory/Corrections (Active Rules)&lt;br&gt;04-Agent-Memory/Sessions (Dialogue Archival)&lt;/code&gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry x="780" y="170" width="340" height="85" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='font-size: 14px; color: #38bdf8;'&gt;7. Periodic Memory Consolidation&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 11px;'&gt;Agentic Sleep Cycle (Episodic -&gt; Semantic)&lt;br&gt;Automated Decay &amp; Superseded Archival&lt;br&gt;&lt;i style='color: #7dd3fc;'&gt;Promote Durable Rules (&gt;=3) to Project Guidelines&lt;/i&gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry x="780" y="320" width="340" height="85" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 8: Vault Health Linter -->
+        <mxCell id="s8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#14b8a6;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='font-size: 14px; color: #2dd4bf;'&gt;8. Quantitative Vault Linter &amp; Self-Healing&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 11px;'&gt;0-100 Quantitative Health Score [100/100 Standard]&lt;br&gt;Broken Wikilink Repair &amp; Orphan Note Re-attachment&lt;br&gt;&lt;i style='color: #5eead4;'&gt;Maintains Clean Grounding &amp; High Retrieval Recall&lt;/i&gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry x="425" y="565" width="350" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- Output Engine -->
+        <mxCell id="engine" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#064e3b;strokeColor=#10b981;strokeWidth=2;fontColor=#ffffff;arcSize=20;" value="&lt;b style='font-size: 15px; color: #34d399;'&gt;Unified Persistent Knowledge Engine&lt;/b&gt;&lt;br&gt;&lt;span style='color: #a7f3d0; font-size: 12px;'&gt;Obsidian Vault | FastMCP Native Tools | Grounded Claude, Antigravity, Cursor &amp; OpenAI&lt;/span&gt;" vertex="1">
+          <mxGeometry x="350" y="680" width="500" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Edges -->
+        <mxCell id="e_raw_s1" edge="1" parent="1" source="in_raw" target="s1" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6366f1;strokeWidth=2;" />
+        <mxCell id="e_s1_s2" edge="1" parent="1" source="s1" target="s2" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284c7;strokeWidth=2;" />
+        <mxCell id="e_s2_s3" edge="1" parent="1" source="s2" target="s3" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=2;" />
+        <mxCell id="e_s3_s4" edge="1" parent="1" source="s3" target="s4" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#10b981;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;exitX=0.25;exitY=1;entryX=0.5;entryY=0;" />
+        <mxCell id="e_s3_s5" edge="1" parent="1" source="s3" target="s5" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#10b981;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;exitX=0.75;exitY=1;entryX=0.5;entryY=0;" />
+        
+        <mxCell id="e_turns_s6" edge="1" parent="1" source="in_turns" target="s6" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#8b5cf6;strokeWidth=2;" />
+        <mxCell id="e_s6_s7" edge="1" parent="1" source="s6" target="s7" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#8b5cf6;strokeWidth=2;" />
+
+        <mxCell id="e_s4_s8" edge="1" parent="1" source="s4" target="s8" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e11d48;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.2;entryY=0;" />
+        <mxCell id="e_s5_s8" edge="1" parent="1" source="s5" target="s8" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d97706;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" />
+        <mxCell id="e_s7_s8" edge="1" parent="1" source="s7" target="s8" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284c7;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.8;entryY=0;" />
+
+        <mxCell id="e_s8_engine" edge="1" parent="1" source="s8" target="engine" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#14b8a6;strokeWidth=2;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

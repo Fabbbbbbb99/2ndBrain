@@ -1,0 +1,78 @@
+# 2ndBrain Git Ignore Rules
+
+# Python & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Model Weights & Runtime Caches (Laya & Transcriptions)
+*.onnx
+*.bin
+*.pt
+*.safetensors
+models/
+.cache/
+
+# Databases & Runtime Indices
+*.db
+*.sqlite
+*.sqlite3
+.code-review-graph.db
+graphify-out/
+.graphify_*
+
+# Media Files, Archives & Raw Documents
+*.pdf
+*.zip
+*.tar.gz
+*.mp4
+*.mp3
+*.wav
+*.mkv
+*.mov
+raw_audio/
+Knowledge Base Material/
+*_extracted.txt
+*_extracted.json
+
+# Secrets & Environment Variables
+.env
+*.pem
+*.key
+
+# One-off Standards Ingestion & OCR Scripts
+scripts/build_*.py
+scripts/ocr_*.py
+!scripts/ingest_knowledge.py
+
+# --- Ignore Ingested Knowledge Base (ISO, INCOSE, ANSI, etc.) ---
+# Preserve directory scaffolding & placeholder READMEs, ignore ingested concept notes
+vault_template/01-Concepts/*/
+!vault_template/01-Concepts/Architecture/
+!vault_template/01-Concepts/Decisions/
+vault_template/01-Concepts/*.md
+!vault_template/01-Concepts/Architecture/README.md
+!vault_template/01-Concepts/Decisions/README.md
+
+# Preserve source directory scaffolding, ignore ingested source notes
+vault_template/03-Sources/*/
+!vault_template/03-Sources/Papers/
+!vault_template/03-Sources/Transcripts/
+vault_template/03-Sources/*.md
+!vault_template/03-Sources/Papers/README.md
+!vault_template/03-Sources/Transcripts/README.md
+
+# Ignore session memory & corrections notes, preserve scaffolding
+vault_template/04-Agent-Memory/Corrections/*.md
+!vault_template/04-Agent-Memory/Corrections/README.md
+vault_template/04-Agent-Memory/Sessions/*.md
+!vault_template/04-Agent-Memory/Sessions/README.md
+vault_template/00-Meta/*.local.md
+user_vault/
+data/
+vault_template/04-Agent-Memory/telemetry.jsonl
+.*.drawio.bkp
+*.drawio.bkp

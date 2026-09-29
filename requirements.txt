@@ -1,0 +1,24 @@
+# --- Core 2ndBrain Engines & Graph Tools ---
+laya>=0.3.21
+torch>=2.0.0
+graphifyy>=0.3.10
+code-review-graph>=0.1.0
+onnxruntime>=1.18.0
+numpy>=1.26.0
+tokenizers>=0.19.0
+networkx>=3.2.0
+pyyaml>=6.0.0
+pydantic>=2.0.0
+click>=8.1.0
+
+# --- Universal MCP Server (Claude, Cursor, Windsurf) ---
+mcp>=1.8.0
+
+# --- PDF Ingestion, Tables & Neural OCR ---
+pypdf>=4.0.0
+pdfplumber>=0.11.0
+pypdfium2>=5.0.0
+rapidocr-onnxruntime>=1.2.0
+
+# --- Local Hybrid Vector Embeddings ---
+fastembed>=0.8.0
