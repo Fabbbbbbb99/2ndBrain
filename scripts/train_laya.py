@@ -10,6 +10,7 @@ Features:
 """
 
 import os
+import sys
 import json
 import shutil
 import warnings
@@ -430,4 +431,10 @@ def train_laya(
 
 
 if __name__ == "__main__":
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
     train_laya()

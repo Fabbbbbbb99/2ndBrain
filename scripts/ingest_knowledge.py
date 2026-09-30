@@ -312,7 +312,7 @@ class UniversalKnowledgeIngester:
             full_text = "\n\n".join(extract_res["pages"])
             total_pages = extract_res["num_pages"]
             tables_found = extract_res.get("tables_found", 0)
-        elif file_path.suffix.lower() in [".txt", ".md"]:
+        elif file_path.suffix.lower() in [".txt", ".md", ".rst"]:
             try:
                 raw_content = file_path.read_text(encoding="utf-8", errors="ignore")
                 full_text = preserve_equations_and_math(detect_heuristic_tables(raw_content))
@@ -470,7 +470,7 @@ Map of Content for **{clean_title}**.
             return []
 
         results = []
-        supported_exts = {".pdf", ".txt", ".md"}
+        supported_exts = {".pdf", ".txt", ".md", ".rst"}
 
         for p in sorted(source_dir.rglob("*")):
             if p.is_file() and p.suffix.lower() in supported_exts:

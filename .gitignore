@@ -34,6 +34,7 @@ graphify-out/
 *.mkv
 *.mov
 raw_audio/
+raw_materials/
 Knowledge Base Material/
 *_extracted.txt
 *_extracted.json
@@ -46,6 +47,7 @@ Knowledge Base Material/
 # One-off Standards Ingestion & OCR Scripts
 scripts/build_*.py
 scripts/ocr_*.py
+scripts/clone_*.py
 !scripts/ingest_knowledge.py
 
 # --- Ignore Ingested Knowledge Base (ISO, INCOSE, ANSI, etc.) ---
