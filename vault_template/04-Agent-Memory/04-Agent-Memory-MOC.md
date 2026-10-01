@@ -21,6 +21,7 @@ Map of Content for Robbie's local-first persistent memory engine. Structured acr
 ### 2. ⚖️ 02-Decisions
 *Architectural Decision Records (ADRs), technical trade-offs, and design rationales.*
 * [[2026-10-01_local_first_4_pillar_agent_memory]] — Architectural Decision Record adopting 4-pillar local memory ontology over third-party cloud SaaS.
+* [[2026-10-01_when-migrating-turtlebot3-from-ros]] — WSL2 ROS 2 Jazzy & Gazebo Harmonic migration architecture rules.
 
 ### 3. 📌 03-Facts
 *Permanent system invariants, hardware configurations, and mathematical conventions.*
