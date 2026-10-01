@@ -194,17 +194,65 @@ def brain_blast_radius(symbol: str, target_dir: Optional[str] = None) -> str:
 
 
 @mcp.tool()
-def brain_remember(rule_or_decision: str, context: str = "", category: str = "user_preference", vault_path: Optional[str] = None) -> str:
+def brain_remember(rule_or_decision: str, context: str = "", category: str = "fact", vault_path: Optional[str] = None) -> str:
     """
-    Permanently crystallizes a rule, architectural decision, or user correction into the
-    Obsidian second brain so all future LLM sessions recall it.
+    Permanently crystallizes a memory into the Obsidian second brain across 4 structured pillars:
+    - category='task': Actionable roadmap milestone or task item in 04-Agent-Memory/01-Tasks/
+    - category='decision': Architectural Decision Record (ADR) in 04-Agent-Memory/02-Decisions/
+    - category='fact': Permanent system invariant or project truth in 04-Agent-Memory/03-Facts/
+    - category='skill': Reusable execution recipe or debugging workflow in 04-Agent-Memory/04-Skills/
     """
     vault = vault_path or DEFAULT_VAULT
     distiller = get_distiller(vault)
-    saved_path = distiller.distill_turn(rule_or_decision, context or "User explicit instruction")
+    saved_path = distiller.distill_turn(rule_or_decision, context or "User explicit instruction", category=category)
     if saved_path:
-        return f"Successfully crystallized memory note: {saved_path.name}"
+        return f"Successfully crystallized memory note [{category.upper()}]: {saved_path.name}"
     return "Memory was evaluated as transient or duplicate by Laya."
+
+
+@mcp.tool()
+def brain_remember_task(title: str, details: str, status: str = "pending", priority: str = "medium", milestone: str = "", vault_path: Optional[str] = None) -> str:
+    """
+    Explicitly creates an actionable task or roadmap milestone under 04-Agent-Memory/01-Tasks/.
+    """
+    vault = vault_path or DEFAULT_VAULT
+    distiller = get_distiller(vault)
+    saved = distiller.remember_task(title=title, details=details, status=status, priority=priority, milestone=milestone)
+    return f"Successfully saved task to 01-Tasks: {saved.name}"
+
+
+@mcp.tool()
+def brain_remember_decision(title: str, rationale: str, alternatives: Optional[List[str]] = None, impact: str = "", vault_path: Optional[str] = None) -> str:
+    """
+    Explicitly records an Architectural Decision Record (ADR) under 04-Agent-Memory/02-Decisions/.
+    """
+    vault = vault_path or DEFAULT_VAULT
+    distiller = get_distiller(vault)
+    saved = distiller.remember_decision(title=title, rationale=rationale, alternatives=alternatives, impact=impact)
+    return f"Successfully saved decision ADR to 02-Decisions: {saved.name}"
+
+
+@mcp.tool()
+def brain_remember_fact(statement: str, source: str = "project_grounding", domain: str = "robotics", vault_path: Optional[str] = None) -> str:
+    """
+    Explicitly records an invariant system truth or hardware specification under 04-Agent-Memory/03-Facts/.
+    """
+    vault = vault_path or DEFAULT_VAULT
+    distiller = get_distiller(vault)
+    saved = distiller.remember_fact(statement=statement, source=source, domain=domain)
+    return f"Successfully saved system fact to 03-Facts: {saved.name}"
+
+
+@mcp.tool()
+def brain_remember_skill(skill_name: str, steps: List[str], trigger: str = "", vault_path: Optional[str] = None) -> str:
+    """
+    Explicitly records a learned execution recipe or troubleshooting procedure under 04-Agent-Memory/04-Skills/.
+    """
+    vault = vault_path or DEFAULT_VAULT
+    distiller = get_distiller(vault)
+    saved = distiller.remember_skill(skill_name=skill_name, steps=steps, trigger=trigger)
+    return f"Successfully saved execution skill to 04-Skills: {saved.name}"
+
 
 
 @mcp.tool()

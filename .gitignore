@@ -78,3 +78,4 @@ data/
 vault_template/04-Agent-Memory/telemetry.jsonl
 .*.drawio.bkp
 *.drawio.bkp
+scratch/

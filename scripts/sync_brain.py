@@ -289,6 +289,7 @@ def main():
     # Subcommand: remember (Explicit Rule Crystallization)
     remember_p = subparsers.add_parser("remember", help="Explicitly crystallize a learned rule or decision")
     remember_p.add_argument("rule", help="Rule or decision statement")
+    remember_p.add_argument("--category", choices=["task", "decision", "fact", "skill"], default=None, help="Memory pillar: task, decision, fact, or skill")
     remember_p.add_argument("--tag", default="general", help="Category tag (e.g. security, architecture)")
     remember_p.add_argument("--vault", default=DEFAULT_VAULT, help=f"Path to Obsidian vault (default: {DEFAULT_VAULT})")
 
@@ -345,7 +346,8 @@ def main():
             run_command(["code-review-graph", "query", "callers_of", target_sym], cwd=args.target)
     elif args.command == "remember":
         distiller = ConversationalMemoryDistiller(args.vault)
-        saved = distiller.distill_turn(args.rule, f"Explicitly remembered via CLI with tag: {args.tag}")
+        cat = args.category or (args.tag if args.tag in ("task", "decision", "fact", "skill") else None)
+        saved = distiller.distill_turn(args.rule, f"Explicitly remembered via CLI with tag: {args.tag}", category=cat)
         if saved:
             print(f"[2ndBrain] Successfully crystallized rule into Obsidian: {saved.name}")
         else:

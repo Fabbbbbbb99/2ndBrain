@@ -33,15 +33,23 @@ class ConversationalMemoryDistiller:
     def __init__(self, vault_dir: str):
         self.vault_dir = Path(vault_dir).resolve()
         self.memory_dir = self.vault_dir / "04-Agent-Memory"
+        # 4-Pillar Structured Ontology (Tasks, Decisions, Facts, Skills)
+        self.tasks_dir = self.memory_dir / "01-Tasks"
+        self.decisions_dir = self.memory_dir / "02-Decisions"
+        self.facts_dir = self.memory_dir / "03-Facts"
+        self.skills_dir = self.memory_dir / "04-Skills"
+        # Legacy & Auxiliary memory directories for continuity
         self.corrections_dir = self.memory_dir / "Corrections"
         self.sessions_dir = self.memory_dir / "Sessions"
         self.archive_dir = self.memory_dir / "Archive"
         self.reports_dir = self.memory_dir / "Consolidation-Reports"
-        self.decisions_dir = self.vault_dir / "01-Concepts" / "Decisions"
+        self.concepts_decisions_dir = self.vault_dir / "01-Concepts" / "Decisions"
         self.guidelines_dir = self.vault_dir / "01-Concepts" / "Architecture"
 
-        # Ensure directories exist
-        for d in [self.corrections_dir, self.sessions_dir, self.archive_dir, self.reports_dir, self.decisions_dir, self.guidelines_dir]:
+        # Ensure all directories exist
+        for d in [self.tasks_dir, self.decisions_dir, self.facts_dir, self.skills_dir,
+                 self.corrections_dir, self.sessions_dir, self.archive_dir, self.reports_dir,
+                 self.concepts_decisions_dir, self.guidelines_dir]:
             d.mkdir(parents=True, exist_ok=True)
 
     def _parse_note_metadata(self, note_path: Path) -> Dict[str, Any]:
@@ -154,7 +162,14 @@ class ConversationalMemoryDistiller:
         Scans existing memory notes.
         Returns: (matching_note_path, is_reinforcement)
         """
-        all_notes = list(self.corrections_dir.glob("*.md")) + list(self.decisions_dir.glob("*.md"))
+        all_notes = (
+            list(self.tasks_dir.glob("*.md")) +
+            list(self.decisions_dir.glob("*.md")) +
+            list(self.facts_dir.glob("*.md")) +
+            list(self.skills_dir.glob("*.md")) +
+            list(self.corrections_dir.glob("*.md")) +
+            list(self.concepts_decisions_dir.glob("*.md"))
+        )
         new_rule_lower = new_rule.lower()
         user_lower = user_msg.lower()
         new_tokens = set(re.findall(r"\w{3,}", new_rule_lower))
@@ -203,7 +218,7 @@ class ConversationalMemoryDistiller:
 
         return None, False
 
-    def distill_turn(self, user_msg: str, assistant_msg: str, session_id: Optional[str] = None) -> Optional[Path]:
+    def distill_turn(self, user_msg: str, assistant_msg: str, session_id: Optional[str] = None, category: Optional[str] = None) -> Optional[Path]:
         """
         Evaluates a single conversation turn. If Laya identifies a durable rule or decision:
         1. Checks if it reinforces an existing rule.
@@ -242,8 +257,27 @@ class ConversationalMemoryDistiller:
         slug = "-".join(clean_words) or f"rule_{timestamp_str}"
         file_name = f"{now_str}_{slug}.md"
 
-        if m_type == "architectural_constraint":
+        cat = (category or "").lower()
+        if cat in ("task", "tasks", "01-tasks"):
+            target_path = self.tasks_dir / file_name
+            m_type = "task"
+        elif cat in ("decision", "decisions", "02-decisions", "adr"):
             target_path = self.decisions_dir / file_name
+            m_type = "decision"
+        elif cat in ("fact", "facts", "03-facts", "invariant"):
+            target_path = self.facts_dir / file_name
+            m_type = "fact"
+        elif cat in ("skill", "skills", "04-skills", "procedure", "workflow"):
+            target_path = self.skills_dir / file_name
+            m_type = "skill"
+        elif m_type in ("architectural_constraint", "decision"):
+            target_path = self.decisions_dir / file_name
+        elif m_type in ("fact", "system_fact"):
+            target_path = self.facts_dir / file_name
+        elif m_type in ("task", "todo"):
+            target_path = self.tasks_dir / file_name
+        elif m_type in ("skill", "workflow"):
+            target_path = self.skills_dir / file_name
         else:
             target_path = self.corrections_dir / file_name
 
@@ -291,6 +325,141 @@ tags:
 """
         target_path.write_text(note_content, encoding="utf-8")
         print(f"[Memory Distiller] Crystallized new memory note: {target_path.name}")
+        return target_path
+
+
+    # =========================================================================
+    # 4-PILLAR EXPLICIT MEMORY HELPERS
+    # =========================================================================
+    def remember_task(self, title: str, details: str, status: str = "pending", priority: str = "medium", milestone: str = "") -> Path:
+        """Records an actionable task or roadmap milestone in 04-Agent-Memory/01-Tasks/."""
+        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        slug = "-".join(re.sub(r"[^\w\s-]", "", title.lower()).split()[:5]) or "task"
+        target_path = self.tasks_dir / f"{now_str}_{slug}.md"
+        content = f"""---
+title: "{title}"
+type: task
+status: {status}
+priority: {priority}
+milestone: "{milestone}"
+created: {now_str}
+last_reinforced: {now_str}
+tags:
+  - second-brain/memory
+  - memory/task
+---
+
+# 📋 Task: {title}
+
+> [!NOTE] Task Details
+> **Status**: {status} | **Priority**: {priority} | **Milestone**: {milestone or 'General'}
+
+## Description
+{details.strip()}
+
+### Verification Criteria
+- [ ] Code implementation complete
+- [ ] Unit tests pass
+- [ ] Documented in project roadmap
+"""
+        target_path.write_text(content, encoding="utf-8")
+        print(f"[Memory Distiller] Recorded task: {target_path.name}")
+        return target_path
+
+    def remember_decision(self, title: str, rationale: str, alternatives: Optional[List[str]] = None, impact: str = "") -> Path:
+        """Records an Architectural Decision Record (ADR) in 04-Agent-Memory/02-Decisions/."""
+        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        slug = "-".join(re.sub(r"[^\w\s-]", "", title.lower()).split()[:5]) or "decision"
+        target_path = self.decisions_dir / f"{now_str}_{slug}.md"
+        alt_str = "\n".join(f"- {a}" for a in (alternatives or [])) or "- None considered"
+        content = f"""---
+title: "{title}"
+type: decision
+status: active
+created: {now_str}
+last_reinforced: {now_str}
+confidence: 0.95
+tags:
+  - second-brain/memory
+  - memory/decision
+  - adr
+---
+
+# ⚖️ Decision: {title}
+
+> [!IMPORTANT] Architectural Decision Record (ADR)
+> **Decision**: {title}
+> **Status**: Active | **Date**: {now_str}
+
+## Rationale
+{rationale.strip()}
+
+## Alternatives Considered
+{alt_str}
+
+## Impact & Trade-offs
+{impact.strip() or 'Establishes project standard.'}
+"""
+        target_path.write_text(content, encoding="utf-8")
+        print(f"[Memory Distiller] Recorded decision: {target_path.name}")
+        return target_path
+
+    def remember_fact(self, statement: str, source: str = "project_grounding", domain: str = "robotics") -> Path:
+        """Records an invariant truth or system configuration in 04-Agent-Memory/03-Facts/."""
+        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        slug = "-".join(re.sub(r"[^\w\s-]", "", statement.lower()).split()[:5]) or "fact"
+        target_path = self.facts_dir / f"{now_str}_{slug}.md"
+        content = f"""---
+title: "{statement[:80]}"
+type: fact
+status: active
+domain: {domain}
+created: {now_str}
+last_reinforced: {now_str}
+confidence: 1.0
+tags:
+  - second-brain/memory
+  - memory/fact
+---
+
+# 📌 Fact: {statement[:80]}
+
+> [!NOTE] System Invariant
+> **Fact**: {statement}
+> **Domain**: {domain} | **Source**: {source}
+"""
+        target_path.write_text(content, encoding="utf-8")
+        print(f"[Memory Distiller] Recorded fact: {target_path.name}")
+        return target_path
+
+    def remember_skill(self, skill_name: str, steps: List[str], trigger: str = "") -> Path:
+        """Records a learned execution recipe or procedure in 04-Agent-Memory/04-Skills/."""
+        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        slug = "-".join(re.sub(r"[^\w\s-]", "", skill_name.lower()).split()[:5]) or "skill"
+        target_path = self.skills_dir / f"{now_str}_{slug}.md"
+        steps_str = "\n".join(f"{i+1}. {s}" for i, s in enumerate(steps))
+        content = f"""---
+title: "{skill_name}"
+type: skill
+status: active
+trigger: "{trigger}"
+created: {now_str}
+last_reinforced: {now_str}
+tags:
+  - second-brain/memory
+  - memory/skill
+---
+
+# 🛠️ Skill: {skill_name}
+
+> [!TIP] Execution Recipe
+> **Trigger**: {trigger or 'Invoked when solving ' + skill_name}
+
+## Step-by-Step Procedure
+{steps_str}
+"""
+        target_path.write_text(content, encoding="utf-8")
+        print(f"[Memory Distiller] Recorded skill: {target_path.name}")
         return target_path
 
     # =========================================================================
@@ -634,8 +803,12 @@ dry_run: {str(dry_run).lower()}
         scored_memories = []
 
         all_notes = (
-            list(self.corrections_dir.glob("*.md")) + 
+            list(self.tasks_dir.glob("*.md")) +
             list(self.decisions_dir.glob("*.md")) +
+            list(self.facts_dir.glob("*.md")) +
+            list(self.skills_dir.glob("*.md")) +
+            list(self.corrections_dir.glob("*.md")) +
+            list(self.concepts_decisions_dir.glob("*.md")) +
             list(self.sessions_dir.glob("*.md"))
         )
 
@@ -675,7 +848,8 @@ dry_run: {str(dry_run).lower()}
 
                 statement = meta.get("statement", p.stem)
                 status_tag = f"[Reinforced {count}x]" if count > 1 else ""
-                scored_memories.append((composite_weight, f"- [[{p.stem}]] {status_tag}: {statement}".strip()))
+                m_type_badge = f"[{meta.get('type', 'memory').upper()}]"
+                scored_memories.append((composite_weight, f"- {m_type_badge} [[{p.stem}]] {status_tag}: {statement}".strip()))
 
         scored_memories.sort(key=lambda x: x[0], reverse=True)
         return [m[1] for m in scored_memories[:max_items]]
