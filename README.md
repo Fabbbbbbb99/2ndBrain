@@ -7,6 +7,7 @@ A local-first, dual-process cognitive second brain that turns code, documents, a
 - **Graphify**: Semantic GraphRAG with community detection (Leiden/Louvain algorithms), god nodes, and cross-document concept clustering.
 - **Obsidian**: Local markdown vault interconnected via bidirectional `[[wikilinks]]`, persistent Architectural Decision Records (ADRs), and self-evolving conversational memory.
 - **Hybrid Search**: Offline 384-d dense vector embeddings (`fastembed` with `BAAI/bge-small-en-v1.5`) fused with BM25 keyword matching via Reciprocal Rank Fusion (RRF) stored in local SQLite.
+- **4-Pillar Persistent Memory**: Categorizes long-term memory into `Tasks`, `Decisions`, `Facts`, and `Skills` in Obsidian markdown notes with schema validation, conflict deduplication, and decay-weighted prompt recall.
 
 ---
 
@@ -30,7 +31,7 @@ Standard LLMs suffer from three fundamental limitations:
 
 ---
 
-## 🧱 The 5 Architectural Layers
+## 🧱 The 6 Architectural Layers
 
 | Layer | Engine | Implementation & Models | Primary Responsibility |
 | :--- | :--- | :--- | :--- |
@@ -39,6 +40,7 @@ Standard LLMs suffer from three fundamental limitations:
 | **L2: Semantic Graph** | **Graphify** | Leiden / Louvain GraphRAG | High-level module boundaries, concept clustering, bridge nodes, and cross-document relational graphs. |
 | **L3: Knowledge Vault** | **Obsidian** | Markdown + bidirectional `[[wikilinks]]` | Human-in-the-loop navigation, persistent ADRs, Maps of Content (MOCs), and learned prompt constraints. |
 | **L4: Vector Index** | **Hybrid Search** | Parent-Child Hierarchical Dense (`fastembed` BAAI/bge-small-en-v1.5) + SQLite BM25 | Decomposes notes into Parent Sections and matches on granular Child Chunks (~350 chars) with document & section prefixes. Fuses with BM25 via Reciprocal Rank Fusion (RRF) and injects full, rich parent clauses directly to LLMs. |
+| **L5: Persistent Memory** | **4-Pillar Memory Ontology** | Local-First Obsidian Markdown + Schema Validation | Categorizes long-term context into `01-Tasks`, `02-Decisions`, `03-Facts`, and `04-Skills` with bidirectional `04-Agent-Memory-MOC.md` linking, confidence scoring, conflict deduplication, and decay-weighted prompt recall. |
 
 ---
 
@@ -85,7 +87,7 @@ To eliminate overconfidence and logit saturation, the training pipeline ([`scrip
 | **3. Link** | Semantic Cross-Referencing | Weaves entity and topic relationships into Obsidian bidirectional `[[wikilinks]]` and updates `Index.md`. |
 | **4. Chunk & Index** | Parent-Child Hierarchical Search | Decomposes parent sections and embeds granular child chunks (`fastembed` 384-d) into SQLite BM25/RRF. |
 | **5. Graph Topology** | Tree-sitter + Graphify | Constructs zero-hallucination code call graphs and clusters architectural concepts via Leiden/Louvain. |
-| **6. Memory Lifecycle** | Laya Reflex + Distiller | Extracts rules (`04-Agent-Memory/Corrections/`) and archives session dialogues (`04-Agent-Memory/Sessions/`). |
+| **6. Memory Lifecycle** | Laya Reflex + Distiller | Categorizes memories into 4 pillars (`01-Tasks/`, `02-Decisions/`, `03-Facts/`, `04-Skills/`) with bidirectional MOC linkage. |
 | **7. Consolidation** | "Sleep Cycle" Compactor | Prunes dead/decayed rules, merges near-duplicates, and promotes durable conventions to Architecture guidelines. |
 | **8. Audit** | Vault Health Linter | Calculates 0–100 health score, repairs broken links, and attaches orphan notes. |
 
@@ -121,13 +123,96 @@ For software repositories and system architectures:
 * **Tree-sitter AST Parsing**: Ingests code files into an SQLite graph of functions, classes, imports, and calls.
 * **Semantic Community Clustering**: Employs Graphify with Leiden/Louvain algorithms to cluster related files, identify bridge nodes, and isolate architectural "god nodes".
 
-### 6. Dynamic Conversational Knowledge Accretion & Session Archival
-Knowledge grows continuously from conversational interactions:
-* **Reflex Triage**: Laya evaluates whether user statements or corrections establish durable constraints ($P \ge 0.70$).
-* **Constraint Crystallization**: Writes active rules into `04-Agent-Memory/Corrections/` with metadata.
-* **Recency & Reinforcement**: Repeated confirmations increment `reinforcement_count`, while stale rules undergo exponential half-life decay.
-* **Conflict Resolution**: Contradictory instructions mark older rules as `status: superseded` with explicit links to replacement rules.
-* **Automated Session Dialogue Archival**: Compacts entire Q&A sessions or design debates into timestamped persistent session records in `04-Agent-Memory/Sessions/`.
+### 6. Dynamic 4-Pillar Memory Accretion & Session Archival
+Long-term context is categorized into four local-first semantic pillars inside `vault_template/04-Agent-Memory/`:
+* **01-Tasks**: Backlogs, roadmap milestones, and execution status (`pending`, `in_progress`, `completed`).
+* **02-Decisions**: Architectural Decision Records (ADRs) with rationale, alternatives considered, and impact analysis.
+* **03-Facts**: Invariant system groundings, hardware pinouts, baud rates, and REP conventions.
+* **04-Skills**: Reusable procedures, zero-copy code patterns, and troubleshooting recipes.
+* **Reflex Triage & Routing**: Laya evaluates whether turns establish persistent constraints ($P \ge 0.70$) and routes them to the correct pillar.
+* **Reinforcement & Conflict Protection**: Restated conventions increment `reinforcement_count` and refresh timestamps; contradictory statements supersede obsolete notes.
+* **Automated Session Dialogue Archival**: Compacts major discussions into timestamped session records under `04-Agent-Memory/Sessions/`.
+
+---
+
+## 🏛️ 4-Pillar Agent Memory Ontology
+
+Standard memory implementations dump ephemeral conversation turns into a single flat file or vector database, resulting in retrieval noise and memory corruption. `2ndBrain` structures long-term memory into four specialized pillars inspired by cognitive agent ontologies, fully materialized as local Markdown files in your Obsidian vault:
+
+```text
+vault_template/04-Agent-Memory/
+├── 01-Tasks/                   # Operational backlogs & milestones
+│   └── YYYY-MM-DD_<slug>.md    # (status, priority, due_date, steps)
+├── 02-Decisions/               # Architectural Decision Records (ADRs)
+│   └── YYYY-MM-DD_<slug>.md    # (rationale, alternatives, impact)
+├── 03-Facts/                   # Grounded invariant truths & hardware rules
+│   └── YYYY-MM-DD_<slug>.md    # (domain, statement, confidence: 1.0)
+├── 04-Skills/                  # Reusable execution procedures & recipes
+│   └── YYYY-MM-DD_<slug>.md    # (trigger, steps, procedure)
+└── 04-Agent-Memory-MOC.md      # Bidirectional Map of Content (0 island notes)
+```
+
+### Pillar Schemas & Frontmatter
+
+| Pillar | Storage Directory | Frontmatter Metadata Schema | Purpose & Examples |
+| :--- | :--- | :--- | :--- |
+| **📋 Tasks** | `04-Agent-Memory/01-Tasks/` | `type: task`, `status: pending\|in_progress\|completed`, `priority: high\|medium\|low`, `due_date: YYYY-MM-DD` | Actionable work items, sprint milestones, and execution checklists. |
+| **⚖️ Decisions** | `04-Agent-Memory/02-Decisions/` | `type: decision`, `status: active\|superseded`, `confidence: 0.95`, `tags: [adr, memory/decision]` | Architectural choices (e.g., CycloneDDS vs FastDDS), evaluated alternatives, and trade-offs. |
+| **📌 Facts** | `04-Agent-Memory/03-Facts/` | `type: fact`, `status: active`, `domain: robotics\|web\|backend`, `confidence: 1.0` | Invariant truths, pinouts, baud rates, coordinate frames (REP-103), and platform specs. |
+| **🛠️ Skills** | `04-Agent-Memory/04-Skills/` | `type: skill`, `status: active`, `trigger: "condition"`, `tags: [memory/skill]` | Step-by-step procedural execution patterns, zero-copy recipes, and deployment scripts. |
+
+### Memory Ingestion, Deduplication, & Recall Flow
+
+```mermaid
+flowchart TD
+    subgraph Ingestion ["Ingestion Channels"]
+        A["Conversational Turn (Laya Triage P >= 0.7)"]
+        B["FastMCP Tool Call (brain_remember_*)"]
+        C["Master CLI (python sync_brain.py remember)"]
+    end
+
+    subgraph Distiller ["Memory Distiller Engine"]
+        Route{"Category Classifier"}
+        Check{"_detect_conflict_or_reinforcement()"}
+    end
+
+    subgraph Pillars ["Obsidian 04-Agent-Memory/"]
+        T["01-Tasks/"]
+        D["02-Decisions/"]
+        F["03-Facts/"]
+        S["04-Skills/"]
+        MOC["04-Agent-Memory-MOC.md"]
+    end
+
+    Ingestion --> Distiller
+    Distiller --> Route
+    Route -->|task| T
+    Route -->|decision| D
+    Route -->|fact| F
+    Route -->|skill| S
+
+    Check -->|Duplicate / Reinforce| Bump["Increment reinforcement_count, update last_reinforced"]
+    Check -->|Contradiction| Sup["Mark status: superseded, link replacement note"]
+    Check -->|Novel| Write["Write new note + link to 04-Agent-Memory-MOC.md"]
+
+    subgraph Recall ["Prompt Recall Sequence"]
+        Query["Incoming User Query"] --> Scan["Scan Active Notes Across All 4 Pillars"]
+        Scan --> Rank["Rank: Overlap * Decay * (1 + 0.2 * Reinforcements)"]
+        Rank --> Badges["Inject Grounding Badges: [TASK], [DECISION], [FACT], [SKILL]"]
+    end
+```
+
+1. **Autonomous & Explicit Ingestion**:
+   - **Autonomous**: During chat turns, `ConversationalMemoryDistiller` detects triggers (e.g., *"we decided"*, *"always use"*, *"recipe for"*) and categorizes the statement.
+   - **Explicit MCP**: Exposes dedicated tools (`brain_remember_task`, `brain_remember_decision`, `brain_remember_fact`, `brain_remember_skill`).
+   - **CLI**: `python scripts/sync_brain.py remember "<rule>" --category {task,decision,fact,skill}`.
+2. **Conflict Deduplication & Reinforcement**:
+   - Rather than creating duplicate notes, restated conventions increment `reinforcement_count`, update `last_reinforced`, and elevate prompt recall priority.
+   - Contradictory instructions mark older notes as `status: superseded` with explicit bidirectional links to the new ADR.
+3. **Decay-Weighted Prompt Recall**:
+   - Memories are scored via composite ranking:
+     $$\text{Score} = \text{Semantic Overlap} \times e^{-\lambda \cdot \Delta t} \times (1 + 0.2 \cdot \text{Reinforcements})$$
+   - Results are badged with `[TASK]`, `[DECISION]`, `[FACT]`, or `[SKILL]` and prepended to agent prompt context.
 
 ### 7. Strategy 3: Passive Telemetry & Gold Feedback Loop
 Every decision executed by the System 1 engine is recorded without adding user-facing latency:
@@ -207,7 +292,7 @@ Second Brain/
 │   ├── hybrid_search.py      # Local-First Hybrid Search Engine (Parent-Child Dense + BM25 RRF)
 │   ├── memory_distiller.py   # Conversational Memory Distiller (Decay, Reinforce, Supersede, Archival)
 │   ├── vault_linter.py       # Vault Health & Link Integrity Linter (Quantitative 0-100 Score)
-│   ├── mcp_server.py         # Universal FastMCP Server exposing 9 brain tools
+│   ├── mcp_server.py         # Universal FastMCP Server exposing 13 brain tools (including 4 memory pillars)
 │   ├── llm_client.py         # Universal Python SDK adapter (OpenAI, Anthropic, Gemini, Ollama)
 │   ├── ingest_knowledge.py   # Document Ingestion Engine (Digital PDFs, Tables, Equations, Neural OCR)
 │   └── sync_brain.py         # Master CLI orchestrator (10 subcommands)
@@ -216,7 +301,12 @@ Second Brain/
     ├── 01-Concepts/          # Architecture nodes, specifications, and synthesized concepts
     ├── 02-Codebase/          # AST module summaries and blast radius reviews
     ├── 03-Sources/           # Complete source extracts, meeting notes, and literature
-    └── 04-Agent-Memory/      # Active learned rules, telemetry logs, session archives, and reports
+    └── 04-Agent-Memory/      # 4-Pillar agent memory ontology, telemetry logs, session archives, and reports
+        ├── 01-Tasks/         # Actionable work items, sprint backlogs, and status tracking
+        ├── 02-Decisions/     # Architectural Decision Records (ADRs) with trade-offs
+        ├── 03-Facts/         # Invariant truths, system groundings, and hardware pinouts
+        ├── 04-Skills/        # Procedural execution recipes and zero-copy code patterns
+        └── 04-Agent-Memory-MOC.md # Bidirectional Map of Content (0 island notes)
 ```
 
 ---
@@ -242,8 +332,11 @@ python $SB query "How is authentication handled and who calls it?"
 python $SB blast <function_or_class_name>
 python $SB blast --file "path/to/module.py"
 
-# 5. Explicitly crystallize a durable rule or constraint
-python $SB remember "Always use Pydantic models for data validation" --tag "architecture"
+# 5. Explicitly crystallize a durable memory across pillars (--category: task, decision, fact, skill)
+python $SB remember "Always use Pydantic models for data validation" --category fact --tag "architecture"
+python $SB remember "Adopt CycloneDDS over FastDDS for lower packet loss" --category decision --tag "networking"
+python $SB remember "Calibrate Ouster LiDAR extrusion matrix" --category task --tag "sensors"
+python $SB remember "Zero-copy cv_bridge pattern for ROS 2 images" --category skill --tag "perception"
 
 # 6. Archive a conversation dialogue or meeting into persistent memory
 python $SB session --topic "Architecture Review" --summary "Decided on gRPC interfaces." --decisions "Use protobuf v3"
@@ -296,7 +389,7 @@ Register the FastMCP server in your Claude configuration (`%APPDATA%\Claude\clau
   }
 }
 ```
-Claude receives 9 native tools: `brain_query`, `brain_blast_radius`, `brain_remember`, `brain_recall`, `brain_archive_session`, `brain_consolidate_memory`, `brain_sync`, `brain_ingest`, and `brain_lint`.
+Claude receives 13 native tools: `brain_query`, `brain_blast_radius`, `brain_remember`, `brain_remember_task`, `brain_remember_decision`, `brain_remember_fact`, `brain_remember_skill`, `brain_recall`, `brain_archive_session`, `brain_consolidate_memory`, `brain_sync`, `brain_ingest`, and `brain_lint`.
 
 ### 3. Cursor IDE & Windsurf
 1. Open **Cursor Settings** $\rightarrow$ **Features** $\rightarrow$ **MCP Servers**.

@@ -1,6 +1,6 @@
 ---
 name: 2ndBrain
-description: "Dynamic local-first second brain for LLMs. Orchestrates Laya (System 1 fast reflex routing & triage), Code-Review-Graph (Tree-sitter AST & blast radius), Graphify (semantic GraphRAG & community detection), and Obsidian (bi-directional markdown memory vault & conversational learning). Use when the user asks to index, query, review, update, or recall knowledge from their second brain."
+description: "Dynamic local-first second brain for LLMs. Orchestrates Laya (System 1 fast reflex routing & triage), Code-Review-Graph (Tree-sitter AST & blast radius), Graphify (semantic GraphRAG & community detection), Obsidian (bi-directional markdown memory vault & conversational learning), and 4-Pillar Persistent Memory (Tasks, Decisions, Facts, Skills). Use when the user asks to index, query, review, update, or recall knowledge from their second brain."
 ---
 
 # /2ndBrain
@@ -18,6 +18,16 @@ A local-first, dual-process (System 1 Reflex + System 2 Reasoning) second brain 
 | **L2: Semantic Concepts** | **Graphify** (GraphRAG) | Architectural community detection (Leiden/Louvain), god nodes, bridge concepts, and cross-document relationships. |
 | **L3: Knowledge Vault** | **Obsidian** (Markdown + [[wikilinks]]) | Human-in-the-loop navigation, persistent ADRs, and self-evolving prompt/conversational memory. |
 | **L4: Vector Index** | **Hybrid Search** (Parent-Child Dense + SQLite BM25) | Decomposes notes into Parent Sections and matches on granular Child Chunks (384-d `fastembed` BGE-small-en-v1.5) fused with BM25 via Reciprocal Rank Fusion (RRF). Injects complete, rich parent clauses directly to LLMs. |
+| **L5: Persistent Memory** | **4-Pillar Memory Ontology** (Local-First SQLite/MD) | Categorizes long-term context into `01-Tasks`, `02-Decisions`, `03-Facts`, and `04-Skills` that survive across sessions and model handoffs. |
+
+---
+
+## 🏛️ The 4 Memory Pillars (`04-Agent-Memory/`)
+
+1. **📋 `01-Tasks/`**: Actionable work items, sprint backlogs, GSD roadmaps, and execution status (`pending`, `in_progress`, `completed`).
+2. **⚖️ `02-Decisions/`**: Architectural Decision Records (ADRs) with rationale, evaluated alternatives, and trade-offs.
+3. **📌 `03-Facts/`**: System invariants, hardware pinouts, REP standards, and OS/distro rules.
+4. **🛠️ `04-Skills/`**: Reusable execution recipes, zero-copy code patterns, and troubleshooting procedures.
 
 ---
 
@@ -41,8 +51,10 @@ python $SB query "How does module X work and who calls it?"
 # 4. Compute AST blast radius and callers for a symbol or file
 python $SB blast <symbol_or_function_name>
 
-# 5. Explicitly crystallize a durable rule or decision into Obsidian
-python $SB remember "Always use Pydantic models for data validation" --tag "architecture"
+# 5. Explicitly crystallize a durable memory across pillars (--category: task, decision, fact, skill)
+python $SB remember "Always use Pydantic models for data validation" --category fact --tag "architecture"
+python $SB remember "Use gRPC instead of REST for internal microservices" --category decision --tag "networking"
+python $SB remember "Implement user authentication flow" --category task --tag "auth"
 
 # 6. Archive a conversation dialogue or meeting into persistent memory
 python $SB session --topic "Architecture Review" --summary "Decided on microservices boundary." --decisions "Use gRPC for internal RPC"
@@ -67,8 +79,8 @@ python "scripts/mcp_server.py"
 
 This second brain works with **any LLM environment**:
 
-- **Google Antigravity**: Type `@2ndBrain <question>` or run the CLI commands.
-- **Claude Desktop / Claude Code**: Add `scripts/mcp_server.py` to your MCP configuration (`claude_desktop_config.json`). Exposes 9 native tools (`brain_query`, `brain_blast_radius`, `brain_remember`, `brain_recall`, `brain_archive_session`, `brain_consolidate_memory`, `brain_sync`, `brain_ingest`, `brain_lint`).
+- **Google Antigravity**: Type `@2ndBrain <question>`, `@robbie <question>`, or run the CLI commands.
+- **Claude Desktop / Claude Code**: Add `scripts/mcp_server.py` to your MCP configuration (`claude_desktop_config.json`). Exposes 13 native tools (`brain_query`, `brain_blast_radius`, `brain_remember`, `brain_remember_task`, `brain_remember_decision`, `brain_remember_fact`, `brain_remember_skill`, `brain_recall`, `brain_archive_session`, `brain_consolidate_memory`, `brain_sync`, `brain_ingest`, `brain_lint`).
 - **Cursor IDE / Windsurf**: Add `scripts/mcp_server.py` to Settings -> Features -> MCP Servers.
 - **OpenAI, Anthropic & Gemini Python SDKs**: Use `UniversalBrainAdapter` from `scripts/llm_client.py` to auto-enrich prompts or export standard function calling tools.
 - **Local Models (Ollama, LM Studio, Llama 3, DeepSeek-R1)**: Prepend `configs/SYSTEM_PROMPT.md` to your system prompt, or run `UniversalBrainAdapter.enrich_prompt(prompt)` before calling local APIs.
@@ -84,7 +96,7 @@ When activated by the user, follow these procedures:
    ```powershell
    python scripts/sync_brain.py query "<user_prompt>"
    ```
-2. Check for active memories in `04-Agent-Memory/Corrections/` using `ConversationalMemoryDistiller.recall_relevant_memories()`.
+2. Check for active memories in `04-Agent-Memory/` (`01-Tasks`, `02-Decisions`, `03-Facts`, `04-Skills`) using `ConversationalMemoryDistiller.recall_relevant_memories()`.
 3. If past constraints exist, cite them before generating code or architecture plans:
    > *"[2ndBrain Grounding]: Applying active memory rule: [[Rule-Name]]."*
 
@@ -94,7 +106,7 @@ When activated by the user, follow these procedures:
 - If the question targets **high-level architecture, module boundaries, or concepts**:
   - Query `graphify query "<question>"`.
 - If the question targets **past decisions, meetings, or preferences**:
-  - Search `01-Concepts/Decisions/`, `04-Agent-Memory/Corrections/`, or `04-Agent-Memory/Sessions/`.
+  - Search `04-Agent-Memory/02-Decisions/`, `04-Agent-Memory/03-Facts/`, or `04-Agent-Memory/Sessions/`.
 
 ### Step 3: Conversational Memory Distillation & Archival
 1. Whenever the user provides an explicit instruction, correction, or architectural decision during a chat turn:
