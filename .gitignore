@@ -67,15 +67,16 @@ vault_template/03-Sources/*.md
 !vault_template/03-Sources/Papers/README.md
 !vault_template/03-Sources/Transcripts/README.md
 
-# Ignore session memory & corrections notes, preserve scaffolding
-vault_template/04-Agent-Memory/Corrections/*.md
-!vault_template/04-Agent-Memory/Corrections/README.md
-vault_template/04-Agent-Memory/Sessions/*.md
-!vault_template/04-Agent-Memory/Sessions/README.md
+# Ignore all dynamic agent memories, preserve directory scaffolding and MOC template
+vault_template/04-Agent-Memory/*/*.md
+!vault_template/04-Agent-Memory/*/README.md
+!vault_template/04-Agent-Memory/04-Agent-Memory-MOC.md
+vault_template/04-Agent-Memory/Archive/
+vault_template/04-Agent-Memory/Consolidation-Reports/
+vault_template/04-Agent-Memory/telemetry.jsonl
 vault_template/00-Meta/*.local.md
 user_vault/
 data/
-vault_template/04-Agent-Memory/telemetry.jsonl
 .*.drawio.bkp
 *.drawio.bkp
 scratch/
