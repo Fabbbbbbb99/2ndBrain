@@ -44,11 +44,15 @@ def load_yaml_or_json(path: Path) -> Dict[str, Any]:
 
 
 def resolve_source_path(raw_path: str, base_dir: Path) -> Path:
-    """Resolves relative or absolute paths against the project root or raw dir."""
+    """Resolves relative or absolute paths against project root or raw dir."""
     p = Path(raw_path)
     if p.is_absolute():
         return p
     if (PROJECT_ROOT / p).exists():
+        return PROJECT_ROOT / p
+    if (base_dir / p).exists():
+        return base_dir / p
+    if p.parts and p.parts[0] == base_dir.name:
         return PROJECT_ROOT / p
     return base_dir / p
 

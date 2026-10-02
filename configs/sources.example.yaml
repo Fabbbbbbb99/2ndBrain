@@ -1,14 +1,14 @@
 # 2ndBrain Ingestion Sources Manifest Template
 # Copy this file to configs/sources.local.yaml (git-ignored) or configs/sources.yaml to configure custom sources.
 
-# List of folders or specific files relative to project root or raw_materials/
+# List of folders or specific files (relative to raw_materials/ or project root)
 sources:
-  - "raw_materials/papers"
-  - "raw_materials/books/handbook.pdf"
+  - "papers"
+  - "books/handbook.pdf"
 
 # Optional folder-to-title pattern mappings (useful for named lecture sets, numbered chapters, or reports)
 mapped_sources:
-  - directory: "raw_materials/lectures"
+  - directory: "lectures"
     mapping:
       "lec01": "Course Lecture 01 - Introduction and Overview"
       "lec02": "Course Lecture 02 - Core System Architecture"
