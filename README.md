@@ -221,7 +221,7 @@ Every decision executed by the System 1 engine is recorded without adding user-f
 
 ### 8. Periodic Memory Consolidation ("Sleep Cycle")
 To keep memory razor-sharp and prevent fragmentation over weeks of development:
-* Runs `python $SB consolidate` (or via MCP `brain_consolidate_memory`).
+* Runs `python scripts/sync_brain.py consolidate` (or via MCP `brain_consolidate_memory`).
 * **Pruning**: Automatically moves superseded or dead decayed rules into `04-Agent-Memory/Archive/`.
 * **Promotion**: Detects recurring rules (`reinforcement_count >= 3`) and synthesizes them into permanent `01-Concepts/Architecture/Project-Guidelines.md`.
 * **De-duplication**: Merges near-duplicate rules across active memories into the primary rule.
@@ -315,44 +315,50 @@ Second Brain/
 
 The master orchestrator CLI is located at [`scripts/sync_brain.py`](scripts/sync_brain.py).
 
-```powershell
-# Set helper alias (optional):
-$SB = "scripts/sync_brain.py"
+```bash
+# Universal (Linux / macOS / Windows):
+python scripts/sync_brain.py query "How does authentication work?"
 
+# Optional: set an alias in your shell (.bashrc / .zshrc / PowerShell profile)
+# Bash/Zsh: alias sb="python scripts/sync_brain.py"
+# PowerShell: Set-Alias sb "python scripts/sync_brain.py"
+```
+
+```bash
 # 1. Ingest external documents (PDFs, docs, text) into Obsidian vault (with tables & equations)
-python $SB ingest --source "path/to/documents"
+python scripts/sync_brain.py ingest --source "path/to/documents"
 
 # 2. Synchronize the second brain (AST + Graphify + fastembed Vectors + Obsidian)
-python $SB sync --target "."
+python scripts/sync_brain.py sync --target "."
 
 # 3. Intelligent query routed by Laya (System 1) with Parent-Child search & active memory recall
-python $SB query "How is authentication handled and who calls it?"
+python scripts/sync_brain.py query "How is authentication handled and who calls it?"
 
 # 4. Compute AST blast radius and callers for a symbol or file
-python $SB blast <function_or_class_name>
-python $SB blast --file "path/to/module.py"
+python scripts/sync_brain.py blast <function_or_class_name>
+python scripts/sync_brain.py blast --file "path/to/module.py"
 
 # 5. Explicitly crystallize a durable memory across pillars (--category: task, decision, fact, skill)
-python $SB remember "Always use Pydantic models for data validation" --category fact --tag "architecture"
-python $SB remember "Adopt CycloneDDS over FastDDS for lower packet loss" --category decision --tag "networking"
-python $SB remember "Calibrate Ouster LiDAR extrusion matrix" --category task --tag "sensors"
-python $SB remember "Zero-copy cv_bridge pattern for ROS 2 images" --category skill --tag "perception"
+python scripts/sync_brain.py remember "Always use Pydantic models for data validation" --category fact --tag "architecture"
+python scripts/sync_brain.py remember "Adopt CycloneDDS over FastDDS for lower packet loss" --category decision --tag "networking"
+python scripts/sync_brain.py remember "Calibrate LiDAR extrusion matrix" --category task --tag "sensors"
+python scripts/sync_brain.py remember "Zero-copy shared memory pattern for high-bandwidth telemetry" --category skill --tag "systems"
 
 # 6. Archive a conversation dialogue or meeting into persistent memory
-python $SB session --topic "Architecture Review" --summary "Decided on gRPC interfaces." --decisions "Use protobuf v3"
+python scripts/sync_brain.py session --topic "Architecture Review" --summary "Decided on gRPC interfaces." --decisions "Use protobuf v3"
 
 # 7. Run Memory Consolidation ("Sleep Cycle") to prune, merge, and promote rules
-python $SB consolidate
-python $SB consolidate --dry-run
+python scripts/sync_brain.py consolidate
+python scripts/sync_brain.py consolidate --dry-run
 
 # 8. Distill durable rules and decisions from a chat transcript
-python $SB distill --transcript "path/to/transcript.jsonl"
+python scripts/sync_brain.py distill --transcript "path/to/transcript.jsonl"
 
 # 9. Audit vault health, broken wikilinks, and unindexed notes
-python $SB lint
+python scripts/sync_brain.py lint
 
 # 10. Auto-repair high-confidence broken links and register orphan notes
-python $SB lint --fix
+python scripts/sync_brain.py lint --fix
 
 # 11. Re-synthesize training dataset for System 1 Laya model
 python scripts/generate_laya_dataset.py

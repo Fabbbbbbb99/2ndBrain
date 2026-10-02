@@ -33,53 +33,50 @@ A local-first, dual-process (System 1 Reflex + System 2 Reasoning) second brain 
 
 ## Usage Commands
 
-The orchestrator CLI is located in `scripts/sync_brain.py`. By default, `--vault` automatically discovers your vault via `$env:SECOND_BRAIN_VAULT`, sibling `vault_template/`, `./vault`, or `~/.2ndbrain/vault`.
+The orchestrator CLI is located in `scripts/sync_brain.py`. By default, `--vault` automatically discovers your vault via `$SECOND_BRAIN_VAULT`, sibling `vault_template/`, `./vault`, or `~/.2ndbrain/vault`.
 
-```powershell
-# Set helper alias for convenience (adjust path if running outside repo root):
-$SB = "scripts/sync_brain.py"
-
+```bash
 # 1. Ingest external knowledge materials (PDFs, docs) into Obsidian vault (with table & equation preservation)
-python $SB ingest --source "path/to/materials"
+python scripts/sync_brain.py ingest --source "path/to/materials"
 
 # 2. Synchronize the second brain (AST + Graphify + fastembed Vectors + Obsidian)
-python $SB sync --target "."
+python scripts/sync_brain.py sync --target "."
 
 # 3. Intelligent query routed by Laya (System 1) with Parent-Child hierarchical search & active memory recall
-python $SB query "How does module X work and who calls it?"
+python scripts/sync_brain.py query "How does module X work and who calls it?"
 
 # 4. Compute AST blast radius and callers for a symbol or file
-python $SB blast <symbol_or_function_name>
+python scripts/sync_brain.py blast <symbol_or_function_name>
 
 # 5. Explicitly crystallize a durable memory across pillars (--category: task, decision, fact, skill)
-python $SB remember "Always use Pydantic models for data validation" --category fact --tag "architecture"
-python $SB remember "Use gRPC instead of REST for internal microservices" --category decision --tag "networking"
-python $SB remember "Implement user authentication flow" --category task --tag "auth"
+python scripts/sync_brain.py remember "Always use Pydantic models for data validation" --category fact --tag "architecture"
+python scripts/sync_brain.py remember "Use gRPC instead of REST for internal microservices" --category decision --tag "networking"
+python scripts/sync_brain.py remember "Implement user authentication flow" --category task --tag "auth"
 
 # 6. Archive a conversation dialogue or meeting into persistent memory
-python $SB session --topic "Architecture Review" --summary "Decided on microservices boundary." --decisions "Use gRPC for internal RPC"
+python scripts/sync_brain.py session --topic "Architecture Review" --summary "Decided on microservices boundary." --decisions "Use gRPC for internal RPC"
 
 # 7. Run Memory Consolidation ("Sleep Cycle") to prune, merge, and promote rules
-python $SB consolidate
-python $SB consolidate --dry-run
+python scripts/sync_brain.py consolidate
+python scripts/sync_brain.py consolidate --dry-run
 
 # 8. Distill durable rules and decisions from a chat transcript
-python $SB distill --transcript "path/to/transcript.jsonl"
+python scripts/sync_brain.py distill --transcript "path/to/transcript.jsonl"
 
 # 9. Audit vault health, broken links, and unindexed notes
-python $SB lint
+python scripts/sync_brain.py lint
 
 # 10. Start Universal FastMCP Server (for Claude Code, Cursor, Windsurf)
-python "scripts/mcp_server.py"
+python scripts/mcp_server.py
 
 # 11. Manage GSD Atomic Tasks (Create, List, Start, Done)
-python "scripts/gsd_task.py" create "Synthesize USBL" --goal "Extract Water Linked UGPS" --timebox 30m
-python "scripts/gsd_task.py" list
-python "scripts/gsd_task.py" start "synthesize_usbl"
-python "scripts/gsd_task.py" done "synthesize_usbl"
+python scripts/gsd_task.py create "Implement Rate Limiter" --goal "Add Token Bucket middleware" --timebox 30m
+python scripts/gsd_task.py list
+python scripts/gsd_task.py start "implement_rate_limiter"
+python scripts/gsd_task.py done "implement_rate_limiter"
 
 # 12. Install Git Pre-Commit Hook (Rule 5 Git Isolation + Quality Guard)
-python "scripts/install_git_hooks.py"
+python scripts/install_git_hooks.py
 ```
 
 ---
@@ -111,7 +108,7 @@ When activated by the user, follow these procedures:
 
 ### Step 2: Query Routing & Parent-Child Context
 - If the question targets **function callers, class hierarchies, or blast radius**:
-  - Run `python $SB blast <symbol>` (queries `code-review-graph` AST).
+  - Run `python scripts/sync_brain.py blast <symbol>` (queries `code-review-graph` AST).
 - If the question targets **high-level architecture, module boundaries, or concepts**:
   - Query `graphify query "<question>"`.
 - If the question targets **past decisions, meetings, or preferences**:
@@ -123,11 +120,11 @@ When activated by the user, follow these procedures:
    - If probability $P \ge 0.7$, call `ConversationalMemoryDistiller.distill_turn(user_prompt, model_response)`.
 2. When concluding a major design discussion or milestone session:
    - Call `ConversationalMemoryDistiller.archive_session(topic, summary, key_decisions)` to save a permanent record under `04-Agent-Memory/Sessions/`.
-3. Periodically run `python $SB consolidate` to clean up decayed or superseded rules, merge near-duplicates, and promote recurring rules into permanent architecture guidelines.
+3. Periodically run `python scripts/sync_brain.py consolidate` to clean up decayed or superseded rules, merge near-duplicates, and promote recurring rules into permanent architecture guidelines.
 
 ### Step 4: Incremental Knowledge Sync
 When files are added or modified:
-1. Run `python $SB sync --target "."` to update the AST index, refresh Graphify semantic clusters, and rebuild SQLite Parent-Child vector embeddings.
+1. Run `python scripts/sync_brain.py sync --target "."` to update the AST index, refresh Graphify semantic clusters, and rebuild SQLite Parent-Child vector embeddings.
 
 ---
 

@@ -19,7 +19,22 @@ PRE_COMMIT_DEST = GIT_HOOKS_DIR / "pre-commit"
 
 HOOK_SHELL_SCRIPT = """#!/usr/bin/env bash
 # 2ndBrain Pre-Commit Hook
-python scripts/pre_commit_hook.py
+
+# Detect working Python interpreter (avoids Windows Microsoft Store stubs)
+PYTHON_BIN=""
+for candidate in python python3 py; do
+    if "$candidate" -c "import sys; sys.exit(0)" >/dev/null 2>&1; then
+        PYTHON_BIN="$candidate"
+        break
+    fi
+done
+
+if [ -z "$PYTHON_BIN" ]; then
+    echo "[Pre-Commit Error] No functional Python interpreter found on PATH."
+    exit 1
+fi
+
+"$PYTHON_BIN" scripts/pre_commit_hook.py
 """
 
 def install_hook():
