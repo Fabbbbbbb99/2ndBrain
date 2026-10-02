@@ -14,6 +14,8 @@ Robbie Second Brain & Robotics Engineering Vault curates marine robotics (AUV), 
 Framework standards enforced:
 - **Rule 6 ("I Have ADHD" Protocol):** Action-first formatting, 5-step cognitive ceiling, zero pleasantries/filler, high density.
 - **Rule 7 ("No AI Slop" Standard):** Ban rhetorical tics ("in today's world", "here's the thing", "delve"), strip publisher frontmatter/copyright headers, enforce high math/code density ($\ge 70\%$).
+- **Rule 8 (GSD Work-Unit Specification):** Atomic task files under `04-Agent-Memory/01-Tasks/` with $\le 45$m timeboxes, binary definition of done, and explicit rollback commands. Managed via `scripts/gsd_task.py`.
+- **Pre-Commit Quality Gate:** Installed git hook (`scripts/install_git_hooks.py`, `scripts/pre_commit_hook.py`) enforcing Rule 5 Git isolation, broken wikilink rejection, and AI slop detection before commit creation.
 - **Rule 5 (Git Isolation Rule):** Strictly keep knowledge notes, raw PDFs, and private memories out of Git commits. Framework code, tooling, and scaffolding only.
 
 ---
@@ -22,7 +24,9 @@ Framework standards enforced:
 
 ### A. Framework Alignment & Protocol Implementation
 1. **"I Have ADHD" & "No AI Slop" Protocols**:
-   - Updated `vault_template/00-Meta/System-Rules.md` (Rules 6 & 7).
+   - Updated `vault_template/00-Meta/System-Rules.md` (Rules 6, 7 & 8).
+   - Implemented `scripts/gsd_task.py` and template `vault_template/00-Meta/Templates/Template-GSD-Task.md`.
+   - Implemented `scripts/pre_commit_hook.py` and `scripts/install_git_hooks.py`.
    - Updated `scripts/vault_linter.py` with slop regex auditing and code-block-aware wikilink extraction.
    - Updated `scripts/ingest_knowledge.py` with publisher frontmatter stripping, TOC dot-leader filtering, AI slop purging, and action-first executive takeaways ($\le 5$).
    - Updated global agent skills (`C:\Users\Fabian\.gemini\config\skills\robbie\SKILL.md` and `2ndBrain\SKILL.md`).
@@ -32,12 +36,13 @@ Framework standards enforced:
 
 ### B. Full Knowledge Base Re-Ingestion
 - **Total Ingested Documents**: 260 documents.
-- **Total Vault Notes**: 1,100 notes.
+- **Total Vault Notes**: 1,101 notes.
 - **Vault Linter Audit**: **100/100 [🟢 EXCELLENT]** (0 broken links, 0 island notes, 0 frontmatter errors, 0 AI slop phrases).
 - **Hybrid Vector Index**: Parent-child dense + BM25 embeddings generated in `vault_vectors.db`.
 
 ### C. Repository Synchronization
-- Synced `scripts/`, `.gitignore`, `vault_template/00-Meta/System-Rules.md`, `vault_template/00-Meta/Index.md`, and `handoff.md` to `C:\Users\Fabian\Desktop\Y2T1\RSE2802 Concept Defintion\Second Brain`.
+- Synced `scripts/`, `.gitignore`, `vault_template/00-Meta/`, and `handoff.md` to `C:\Users\Fabian\Desktop\Y2T1\RSE2802 Concept Defintion\Second Brain`.
+- Pre-commit hook installed and verified across both repositories.
 
 ---
 

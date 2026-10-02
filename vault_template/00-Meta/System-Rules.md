@@ -47,3 +47,11 @@ When you (an LLM agent such as Claude, Gemini, Antigravity, or Cursor) interact 
 - **High Information Density**: Prioritize mathematical formulations ($\LaTeX$), formal types, exact C++/Python interface signatures, ROS 2 QoS profiles, and verified call graphs over generic prose summaries.
 - **Empirical Evidence & Grounding**: Every engineering statement must link to an exact source file, line number, REP, or peer-reviewed citation. Never hallucinate API parameters or unverified dependencies.
 - **Anti-Boilerplate**: Strip publisher metadata, copyright blocks, ISBN dumps, and cataloguing tables from ingested documents. Ban happy-path-only stubs lacking error handling or type definitions.
+
+### 8. GSD (Get Stuff Done) Work-Unit Specification
+- **Atomic Work-Units**: All tasks under `04-Agent-Memory/01-Tasks/` must define exactly 1 measurable goal and maximum 3–5 discrete checklist items.
+- **Strict Time-Boxing**: Every work-unit must be scoped to $\le 45$ minutes (`timebox: 30m`). Larger tasks must be decomposed into sequential atomic units.
+- **Binary Definition of Done**: Verification criteria must be pass/fail checks (e.g. exit code 0, 0 linter errors) rather than qualitative descriptions.
+- **Mandatory Failure Rollback**: Every task must declare an explicit, executable rollback command (e.g. `git restore <target>`) in case of unexpected failure.
+- **Pre-Commit Enforcement**: The pre-commit quality gate (`scripts/pre_commit_hook.py`) automatically blocks any commit violating Git Isolation or vault health.
+

@@ -71,6 +71,15 @@ python $SB lint
 
 # 10. Start Universal FastMCP Server (for Claude Code, Cursor, Windsurf)
 python "scripts/mcp_server.py"
+
+# 11. Manage GSD Atomic Tasks (Create, List, Start, Done)
+python "scripts/gsd_task.py" create "Synthesize USBL" --goal "Extract Water Linked UGPS" --timebox 30m
+python "scripts/gsd_task.py" list
+python "scripts/gsd_task.py" start "synthesize_usbl"
+python "scripts/gsd_task.py" done "synthesize_usbl"
+
+# 12. Install Git Pre-Commit Hook (Rule 5 Git Isolation + Quality Guard)
+python "scripts/install_git_hooks.py"
 ```
 
 ---
