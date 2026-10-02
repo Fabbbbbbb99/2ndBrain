@@ -88,7 +88,7 @@ VAULT_PATTERNS = [
     "What are the active user preferences regarding {preference_topic}?",
     "Recall the rule about {preference_topic} from our session notes",
     "Show me meeting transcripts discussing {decision_topic}",
-    "What did Fabian say about {preference_topic}?",
+    "What did the lead developer say about {preference_topic}?",
     "Search specifications in 01-Concepts for {decision_topic}",
     "Retrieve past architectural decisions about {decision_topic}",
     "What notes in the vault mention [[{note_link}]]?",
@@ -205,7 +205,7 @@ SCORE_SAMPLES = [
 
 NOUL_SAMPLES = [
     ("User: Always generate diagrams using Draw.io XML and high-res PNG, never Mermaid.", True),
-    ("User: Remember that my project path is C:/Users/Fabian/Desktop/Second Brain.", True),
+    ("User: Remember that my project path is /workspace/second-brain.", True),
     ("User: When writing Python scripts, always use type annotations on public functions.", True),
     ("User: Correction: never commit model weights or .pt files to the repository.", True),
     ("User: Rule update: use fastembed with BAAI/bge-small-en-v1.5 for dense search.", True),

@@ -88,7 +88,7 @@ python "scripts/install_git_hooks.py"
 
 This second brain works with **any LLM environment**:
 
-- **Google Antigravity**: Type `@2ndBrain <question>`, `@robbie <question>`, or run the CLI commands.
+- **Google Antigravity**: Type `@2ndBrain <question>` or run the CLI commands.
 - **Claude Desktop / Claude Code**: Add `scripts/mcp_server.py` to your MCP configuration (`claude_desktop_config.json`). Exposes 13 native tools (`brain_query`, `brain_blast_radius`, `brain_remember`, `brain_remember_task`, `brain_remember_decision`, `brain_remember_fact`, `brain_remember_skill`, `brain_recall`, `brain_archive_session`, `brain_consolidate_memory`, `brain_sync`, `brain_ingest`, `brain_lint`).
 - **Cursor IDE / Windsurf**: Add `scripts/mcp_server.py` to Settings -> Features -> MCP Servers.
 - **OpenAI, Anthropic & Gemini Python SDKs**: Use `UniversalBrainAdapter` from `scripts/llm_client.py` to auto-enrich prompts or export standard function calling tools.

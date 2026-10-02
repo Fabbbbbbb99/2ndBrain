@@ -102,7 +102,7 @@ def run_vault_linter() -> bool:
 
 def main():
     print("=" * 60)
-    print("🛡️ Robbie / 2ndBrain Pre-Commit Quality & Isolation Guard")
+    print("🛡️ 2ndBrain Pre-Commit Quality & Isolation Guard")
     print("=" * 60)
 
     if not check_staged_isolation():

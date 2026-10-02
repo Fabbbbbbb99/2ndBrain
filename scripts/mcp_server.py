@@ -82,10 +82,6 @@ def get_default_vault() -> str:
     if home_vault.exists():
         return str(home_vault)
 
-    canonical = Path("C:/Users/Fabian/Desktop/Y2T1/RSE2802 Concept Defintion/Second Brain/vault_template")
-    if canonical.exists():
-        return str(canonical)
-
     return str(local_template)
 
 

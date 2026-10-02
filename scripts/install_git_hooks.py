@@ -18,7 +18,7 @@ GIT_HOOKS_DIR = REPO_ROOT / ".git" / "hooks"
 PRE_COMMIT_DEST = GIT_HOOKS_DIR / "pre-commit"
 
 HOOK_SHELL_SCRIPT = """#!/usr/bin/env bash
-# Robbie / 2ndBrain Pre-Commit Hook
+# 2ndBrain Pre-Commit Hook
 python scripts/pre_commit_hook.py
 """
 

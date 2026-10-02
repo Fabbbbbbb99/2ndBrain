@@ -35,11 +35,8 @@ class LayaDecisionEngine:
         telemetry_path: Optional[str] = None
     ):
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        local_model_path = os.path.join(base_dir, "models", "laya-2ndbrain")
-        project_fallback = r"C:\Users\Fabian\Desktop\Y2T1\RSE2802 Concept Defintion\Second Brain\models\laya-2ndbrain"
-        if not (os.path.exists(local_model_path) and os.path.exists(os.path.join(local_model_path, "model.safetensors"))):
-            if os.path.exists(project_fallback) and os.path.exists(os.path.join(project_fallback, "model.safetensors")):
-                local_model_path = project_fallback
+        env_model_path = os.environ.get("LAYA_MODEL_PATH")
+        local_model_path = env_model_path if env_model_path else os.path.join(base_dir, "models", "laya-2ndbrain")
 
         # Auto-detect local fine-tuned and calibrated checkpoint
         if model_id is None:
