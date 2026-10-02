@@ -35,15 +35,17 @@ Framework standards enforced:
    - Un-ignored `!scripts/build_knowledge_base.py` in `.gitignore`.
 
 ### B. Knowledge Base & Curriculum Ingestion
-- **Total Ingested Documents**: 305 documents (added 45 curated lectures from MIT 6.006 & MIT 6.046J).
+- **Total Ingested Documents**: 305 documents (45 curated lectures from MIT 6.006 & MIT 6.046J).
 - **Total Vault Notes**: 1,237 notes.
 - **Algorithms Hub**: Synthesized `01-Concepts/Algorithms/Algorithms-MOC.md` mapping graph traversals, shortest paths (Dijkstra, Bellman-Ford), heaps, balanced trees, and dynamic programming directly to `ompl`, `nanoflann`, `octomap`, and `TheAlgorithms`.
 - **Vault Linter Audit**: **100/100 [🟢 EXCELLENT]** (0 broken links, 0 island notes, 0 frontmatter errors, 0 AI slop phrases).
 - **Hybrid Vector Index**: Parent-child dense + BM25 embeddings updated in `vault_vectors.db`.
 
-### C. Repository Synchronization
-- Synced `scripts/`, `.gitignore`, `vault_template/00-Meta/`, and `handoff.md` to `C:\Users\Fabian\Desktop\Y2T1\RSE2802 Concept Defintion\Second Brain`.
-- Pre-commit hook active across both repositories.
+### C. Redundancy & Repository Cleanup
+- **`Index.md` Purged of Local Sprawl**: Shifted 300+ dynamic per-document MOC links into git-ignored `00-Meta/Index.local.md`. Restored `00-Meta/Index.md` as a pristine, high-level architectural hub tracked in Git.
+- **`raw_materials` Pruned (~67 MB freed)**: Deleted 13 redundant handwritten scan PDFs (`*_orig.pdf`) and all static website export files (`index.html`, `content_map.json`, `robots.txt`, `sitemap.xml`) from MIT 6.006 and 6.046J.
+- **Script Consolidation**: Merged MIT algorithm curation pipeline directly into `scripts/build_knowledge_base.py` and deleted standalone `scripts/ingest_mit_algorithms.py`.
+- **Repository Synchronization**: Synced `scripts/`, `vault_template/00-Meta/`, and `handoff.md` to `Second Brain`. Pre-commit hook active across both repositories.
 
 ---
 

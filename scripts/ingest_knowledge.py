@@ -532,26 +532,19 @@ Map of Content for **{clean_title}**.
         }
 
     def register_in_index(self, title: str, slug: str, moc_name: str):
-        """Appends new document MOC to 00-Meta/Index.md if not already present."""
-        if not self.index_file.exists():
-            return
+        """Appends new document MOC to 00-Meta/Index.local.md (git-ignored) if not already present."""
+        local_index = self.meta_dir / "Index.local.md"
+        if not local_index.exists():
+            local_index.write_text("# 📚 Ingested Knowledge Bases (Local Index)\n\n", encoding="utf-8")
 
-        content = self.index_file.read_text(encoding="utf-8")
+        content = local_index.read_text(encoding="utf-8")
         wikilink_target = f"[[{slug}-MOC|{title}]]"
         
         if slug in content or moc_name in content:
             return  # Already registered
 
-        # Check for Ingested Knowledge Bases section
-        section_header = "## 📚 Ingested Knowledge Bases"
-        new_entry = f"- 📘 {wikilink_target}: Complete concept overview and source extracts."
-
-        if section_header in content:
-            updated_content = content.replace(section_header, f"{section_header}\n{new_entry}")
-        else:
-            updated_content = content + f"\n\n{section_header}\n{new_entry}\n"
-
-        self.index_file.write_text(updated_content, encoding="utf-8")
+        new_entry = f"- 📘 {wikilink_target}: Complete concept overview and source extracts.\n"
+        local_index.write_text(content + new_entry, encoding="utf-8")
 
     def ingest_directory(self, source_dir: Path) -> List[Dict[str, Any]]:
         """Ingests all valid documents found within source_dir recursively."""
