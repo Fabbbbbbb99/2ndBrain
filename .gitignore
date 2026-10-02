@@ -56,16 +56,16 @@ vault_template/01-Concepts/*/
 !vault_template/01-Concepts/Architecture/
 !vault_template/01-Concepts/Decisions/
 vault_template/01-Concepts/*.md
-!vault_template/01-Concepts/Architecture/README.md
-!vault_template/01-Concepts/Decisions/README.md
+vault_template/01-Concepts/*/*.md
+!vault_template/01-Concepts/**/README.md
 
 # Preserve source directory scaffolding, ignore ingested source notes
 vault_template/03-Sources/*/
 !vault_template/03-Sources/Papers/
 !vault_template/03-Sources/Transcripts/
 vault_template/03-Sources/*.md
-!vault_template/03-Sources/Papers/README.md
-!vault_template/03-Sources/Transcripts/README.md
+vault_template/03-Sources/*/*.md
+!vault_template/03-Sources/**/README.md
 
 # Ignore all dynamic agent memories, preserve directory scaffolding and MOC template
 vault_template/04-Agent-Memory/*/*.md
