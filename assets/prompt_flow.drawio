@@ -1,0 +1,220 @@
+<mxfile host="Electron" agent="2ndBrain">
+  <diagram id="prompt-flow" name="2ndBrain Prompt Flow">
+    <mxGraphModel dx="1700" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="1100" background="#0b0f19" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Header -->
+        <mxCell id="hdr" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#38bdf8;fontStyle=1;fontSize=20;" value="Flow 2: When a User Prompts" vertex="1">
+          <mxGeometry x="400" y="15" width="700" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ════════════════════════════════════════════ -->
+        <!-- USER PROMPT INPUT -->
+        <!-- ════════════════════════════════════════════ -->
+        <mxCell id="user_prompt" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1b4b;strokeColor=#6366f1;strokeWidth=2;fontColor=#ffffff;arcSize=24;shadow=1;" value="&lt;b style='font-size: 15px;'&gt;Incoming User Prompt / Query&lt;/b&gt;&lt;br&gt;&lt;span style='color: #818cf8; font-family: monospace;'&gt;@2ndBrain &amp;lt;prompt&amp;gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry x="540" y="60" width="420" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- ════════════════════════════════════════════ -->
+        <!-- SYSTEM 1: LAYA FAST REFLEX (SWIMLANE) -->
+        <!-- ════════════════════════════════════════════ -->
+        <mxCell id="sys1_group" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#38bdf8;strokeWidth=1.5;fontColor=#38bdf8;fontStyle=1;fontSize=13;startSize=30;rounded=1;arcSize=10;dashed=1;" value="System 1: Non-Autoregressive Fast Triage (Laya — ModernBERT-large 421M, &amp;lt;35ms)" vertex="1">
+          <mxGeometry x="60" y="150" width="680" height="280" as="geometry" />
+        </mxCell>
+
+        <!-- Choice Primitive -->
+        <mxCell id="choice" parent="sys1_group" style="rhombus;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #38bdf8; font-size: 12px;'&gt;Choice Primitive&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 10px;'&gt;Route Target&lt;/span&gt;" vertex="1">
+          <mxGeometry x="25" y="45" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Route Targets -->
+        <mxCell id="route_crg" parent="sys1_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#059669;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #34d399; font-size: 12px;'&gt;CRG_AST_CALL_GRAPH&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 10px;'&gt;Code Structure / Callers&lt;/span&gt;" vertex="1">
+          <mxGeometry x="25" y="155" width="180" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="route_graphify" parent="sys1_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#d97706;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #fbbf24; font-size: 12px;'&gt;GRAPHIFY_SEMANTIC_GRAPHRAG&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 10px;'&gt;High-Level Architecture&lt;/span&gt;" vertex="1">
+          <mxGeometry x="25" y="215" width="180" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Noul Primitive -->
+        <mxCell id="noul" parent="sys1_group" style="rhombus;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#8b5cf6;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #a78bfa; font-size: 12px;'&gt;Noul Primitive&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 10px;'&gt;Memory Gate (P &gt;= 0.7)&lt;/span&gt;" vertex="1">
+          <mxGeometry x="260" y="45" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="flag_mem" parent="sys1_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#a78bfa;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #c4b5fd; font-size: 12px;'&gt;Flag for Post-Flight&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 10px;'&gt;Persistent Rule / Decision Detected&lt;/span&gt;" vertex="1">
+          <mxGeometry x="260" y="170" width="180" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Score Primitive -->
+        <mxCell id="score" parent="sys1_group" style="rhombus;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#f43f5e;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #f43f5e; font-size: 12px;'&gt;Score Primitive&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 10px;'&gt;Blast Radius&lt;/span&gt;" vertex="1">
+          <mxGeometry x="490" y="45" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="risk_score" parent="sys1_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#fb7185;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #fda4af; font-size: 12px;'&gt;Syntactic Risk Score&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 10px;'&gt;0.0 — 1.0 Index&lt;/span&gt;" vertex="1">
+          <mxGeometry x="500" y="170" width="140" height="45" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="route_vault" parent="sys1_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#e11d48;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #f43f5e; font-size: 12px;'&gt;OBSIDIAN_VAULT_SEARCH&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 10px;'&gt;Concept / Domain Docs&lt;/span&gt;" vertex="1">
+          <mxGeometry x="260" y="215" width="180" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Internal edges within System 1 -->
+        <mxCell id="e_choice_crg" edge="1" parent="sys1_group" source="choice" target="route_crg" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=1.5;edgeStyle=orthogonalEdgeStyle;fontColor=#6ee7b7;fontSize=9;labelBackgroundColor=none;" value="Code" />
+        <mxCell id="e_choice_graphify" edge="1" parent="sys1_group" source="choice" target="route_graphify" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d97706;strokeWidth=1.5;edgeStyle=orthogonalEdgeStyle;fontColor=#fde68a;fontSize=9;labelBackgroundColor=none;" value="Arch" />
+        <mxCell id="e_choice_vault" edge="1" parent="sys1_group" source="choice" target="route_vault" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e11d48;strokeWidth=1.5;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;entryX=0.5;entryY=0;fontColor=#fda4af;fontSize=9;labelBackgroundColor=none;" value="Docs" />
+        <mxCell id="e_noul_flag" edge="1" parent="sys1_group" source="noul" target="flag_mem" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#a78bfa;strokeWidth=1.5;dashed=1;fontColor=#c4b5fd;fontSize=9;labelBackgroundColor=none;" value="P &gt;= 0.70" />
+        <mxCell id="e_score_risk" edge="1" parent="sys1_group" source="score" target="risk_score" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#fb7185;strokeWidth=1.5;fontColor=#fda4af;fontSize=9;labelBackgroundColor=none;" />
+
+        <!-- Edge: User -> System 1 -->
+        <mxCell id="e_user_sys1" edge="1" parent="1" source="user_prompt" target="sys1_group" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6366f1;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;exitX=0;exitY=0.5;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="400" y="88" />
+              <mxPoint x="400" y="140" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ════════════════════════════════════════════ -->
+        <!-- ACTIVE 4-PILLAR MEMORY RECALL (SWIMLANE) -->
+        <!-- ════════════════════════════════════════════ -->
+        <mxCell id="mem_group" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#a78bfa;strokeWidth=1.5;fontColor=#c4b5fd;fontStyle=1;fontSize=13;startSize=30;rounded=1;arcSize=10;dashed=1;" value="Active 4-Pillar Memory Recall" vertex="1">
+          <mxGeometry x="800" y="150" width="470" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="scanner" parent="mem_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#8b5cf6;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #a78bfa; font-size: 13px;'&gt;Scan 04-Agent-Memory/&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 11px;'&gt;Active Notes (status != superseded)&lt;/span&gt;" vertex="1">
+          <mxGeometry x="30" y="40" width="410" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="rank" parent="mem_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#7c3aed;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #c4b5fd; font-size: 13px;'&gt;Rank: Overlap × Decay × (1 + 0.2 × Reinforcements)&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 11px;'&gt;Semantic Overlap · Exponential Recency Decay · Reinforcement Boost&lt;/span&gt;" vertex="1">
+          <mxGeometry x="30" y="115" width="410" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="badges" parent="mem_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#818cf8;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #e0e7ff; font-size: 13px;'&gt;Prepend Grounding Badges&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 11px;'&gt;[TASK] · [DECISION] · [FACT] · [SKILL]&lt;/span&gt;" vertex="1">
+          <mxGeometry x="30" y="200" width="410" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Internal memory edges -->
+        <mxCell id="e_scan_rank" edge="1" parent="mem_group" source="scanner" target="rank" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#8b5cf6;strokeWidth=1.5;" />
+        <mxCell id="e_rank_badge" edge="1" parent="mem_group" source="rank" target="badges" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=1.5;" />
+
+        <!-- Edge: User -> Memory Recall -->
+        <mxCell id="e_user_mem" edge="1" parent="1" source="user_prompt" target="mem_group" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#a78bfa;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1035" y="88" />
+              <mxPoint x="1035" y="140" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ════════════════════════════════════════════ -->
+        <!-- SYSTEM 2: GROUNDED RETRIEVAL (SWIMLANE) -->
+        <!-- ════════════════════════════════════════════ -->
+        <mxCell id="sys2_group" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#10b981;strokeWidth=1.5;fontColor=#34d399;fontStyle=1;fontSize=13;startSize=30;rounded=1;arcSize=10;" value="System 2: Grounded Retrieval (Deterministic, Zero Hallucination)" vertex="1">
+          <mxGeometry x="60" y="490" width="680" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="ast_exec" parent="sys2_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#059669;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #34d399; font-size: 12px;'&gt;Tree-sitter AST&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 10px;'&gt;Deterministic Callers/Callees&lt;br&gt;&amp;amp; Blast Radius&lt;/span&gt;" vertex="1">
+          <mxGeometry x="20" y="40" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="graph_exec" parent="sys2_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#d97706;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #fbbf24; font-size: 12px;'&gt;Graphify GraphRAG&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 10px;'&gt;God Nodes &amp;amp;&lt;br&gt;Leiden Communities&lt;/span&gt;" vertex="1">
+          <mxGeometry x="240" y="40" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="hybrid_exec" parent="sys2_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#e11d48;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #f43f5e; font-size: 12px;'&gt;Hybrid Search&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 10px;'&gt;Dense Vector + BM25 RRF&lt;br&gt;Full Parent Section Delivery&lt;/span&gt;" vertex="1">
+          <mxGeometry x="460" y="40" width="190" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Routing edges: System 1 -> System 2 -->
+        <mxCell id="e_crg_ast" edge="1" parent="1" source="route_crg" target="ast_exec" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" />
+        <mxCell id="e_graphify_graph" edge="1" parent="1" source="route_graphify" target="graph_exec" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d97706;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" />
+        <mxCell id="e_vault_hybrid" edge="1" parent="1" source="route_vault" target="hybrid_exec" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e11d48;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" />
+
+        <!-- ════════════════════════════════════════════ -->
+        <!-- LLM REASONING & OUTPUT (SWIMLANE) -->
+        <!-- ════════════════════════════════════════════ -->
+        <mxCell id="gen_group" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#7c3aed;strokeWidth=1.5;fontColor=#c4b5fd;fontStyle=1;fontSize=13;startSize=30;rounded=1;arcSize=10;" value="LLM Reasoning &amp;amp; Output" vertex="1">
+          <mxGeometry x="300" y="690" width="900" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="context_block" parent="gen_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#6366f1;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #818cf8; font-size: 13px;'&gt;Assembled Verified Context&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 10px;'&gt;Engine Results + Memory Badges + Risk Scores&lt;/span&gt;" vertex="1">
+          <mxGeometry x="20" y="38" width="270" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="llm" parent="gen_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#7c3aed;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #a78bfa; font-size: 13px;'&gt;Gen AI Model&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 10px;'&gt;Antigravity / Claude / GPT-4o / Gemini / Ollama&lt;/span&gt;" vertex="1">
+          <mxGeometry x="330" y="38" width="260" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="response" parent="gen_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#064e3b;strokeColor=#10b981;strokeWidth=2;fontColor=#ffffff;arcSize=20;" value="&lt;b style='font-size: 14px; color: #34d399;'&gt;Grounded Response&lt;/b&gt;&lt;br&gt;&lt;span style='color: #a7f3d0; font-size: 11px;'&gt;Hallucination-Free Output&lt;/span&gt;" vertex="1">
+          <mxGeometry x="640" y="38" width="230" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ctx_llm" edge="1" parent="gen_group" source="context_block" target="llm" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6366f1;strokeWidth=2;" />
+        <mxCell id="e_llm_resp" edge="1" parent="gen_group" source="llm" target="response" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#10b981;strokeWidth=2;" />
+
+        <!-- Edges: System 2 -> Context Block -->
+        <mxCell id="e_ast_ctx" edge="1" parent="1" source="ast_exec" target="context_block" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.15;entryY=0;" />
+        <mxCell id="e_graph_ctx" edge="1" parent="1" source="graph_exec" target="context_block" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d97706;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.35;entryY=0;" />
+        <mxCell id="e_hybrid_ctx" edge="1" parent="1" source="hybrid_exec" target="context_block" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e11d48;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.55;entryY=0;" />
+
+        <!-- Edge: Badges -> Context Block -->
+        <mxCell id="e_badge_ctx" edge="1" parent="1" source="badges" target="context_block" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#a78bfa;strokeWidth=2;dashed=1;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.85;entryY=0;fontColor=#c4b5fd;fontSize=10;labelBackgroundColor=none;" value="Active Constraints">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1035" y="660" />
+              <mxPoint x="550" y="660" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ════════════════════════════════════════════ -->
+        <!-- POST-FLIGHT MEMORY DISTILLATION (SWIMLANE) -->
+        <!-- ════════════════════════════════════════════ -->
+        <mxCell id="distill_group" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#7dd3fc;fontStyle=1;fontSize=13;startSize=30;rounded=1;arcSize=10;" value="Post-Flight Memory Lifecycle" vertex="1">
+          <mxGeometry x="300" y="860" width="900" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="distiller" parent="distill_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #38bdf8; font-size: 13px;'&gt;ConversationalMemoryDistiller&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 10px;'&gt;Analyze turn for durable rules&lt;/span&gt;" vertex="1">
+          <mxGeometry x="20" y="45" width="230" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="check_exist" parent="distill_group" style="rhombus;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#38bdf8;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #7dd3fc; font-size: 11px;'&gt;Duplicate or&lt;br&gt;Contradiction?&lt;/b&gt;" vertex="1">
+          <mxGeometry x="290" y="40" width="120" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="reinforce" parent="distill_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#10b981;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #34d399; font-size: 11px;'&gt;Reinforce&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 9px;'&gt;++count, update ts&lt;/span&gt;" vertex="1">
+          <mxGeometry x="450" y="38" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="supersede" parent="distill_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#f43f5e;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #f43f5e; font-size: 11px;'&gt;Supersede&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 9px;'&gt;Mark old, link new&lt;/span&gt;" vertex="1">
+          <mxGeometry x="450" y="88" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="save_pillar" parent="distill_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#818cf8;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #e0e7ff; font-size: 11px;'&gt;Novel → Write Pillar&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 9px;'&gt;Tasks / Decisions / Facts / Skills&lt;/span&gt;" vertex="1">
+          <mxGeometry x="620" y="38" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="link_moc" parent="distill_group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#a78bfa;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='color: #c4b5fd; font-size: 11px;'&gt;Link to MOC&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 9px;'&gt;0 island notes&lt;/span&gt;" vertex="1">
+          <mxGeometry x="620" y="88" width="160" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Internal distillation edges -->
+        <mxCell id="e_dist_check" edge="1" parent="distill_group" source="distiller" target="check_exist" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284c7;strokeWidth=1.5;" />
+        <mxCell id="e_check_reinf" edge="1" parent="distill_group" source="check_exist" target="reinforce" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#10b981;strokeWidth=1.5;fontColor=#6ee7b7;fontSize=9;labelBackgroundColor=none;" value="Reinforce" />
+        <mxCell id="e_check_super" edge="1" parent="distill_group" source="check_exist" target="supersede" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#f43f5e;strokeWidth=1.5;fontColor=#fda4af;fontSize=9;labelBackgroundColor=none;" value="Contradict" />
+        <mxCell id="e_check_novel" edge="1" parent="distill_group" source="check_exist" target="save_pillar" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#818cf8;strokeWidth=1.5;exitX=1;exitY=0.25;entryX=0;entryY=0.5;fontColor=#e0e7ff;fontSize=9;labelBackgroundColor=none;" value="Novel" />
+        <mxCell id="e_save_moc" edge="1" parent="distill_group" source="save_pillar" target="link_moc" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#a78bfa;strokeWidth=1.5;" />
+
+        <!-- Edge: Response -> Distiller -->
+        <mxCell id="e_resp_dist" edge="1" parent="1" source="response" target="distiller" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284c7;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontColor=#7dd3fc;fontSize=10;labelBackgroundColor=none;" value="Turn Distillation" />
+
+        <!-- Edge: Flag Memory -> Distiller -->
+        <mxCell id="e_flag_dist" edge="1" parent="1" source="flag_mem" target="distiller" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#a78bfa;strokeWidth=1.5;dashed=1;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0;entryY=0.5;fontColor=#c4b5fd;fontSize=10;labelBackgroundColor=none;" value="Memory Flag">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="410" y="840" />
+              <mxPoint x="260" y="840" />
+              <mxPoint x="260" y="933" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Feedback Loop: Distilled Notes -> Memory Recall (dashed) -->
+        <mxCell id="e_feedback_loop" edge="1" parent="1" source="link_moc" target="scanner" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#f43f5e;strokeWidth=2;dashed=1;edgeStyle=orthogonalEdgeStyle;fontColor=#fda4af;fontSize=10;labelBackgroundColor=none;exitX=1;exitY=0.5;entryX=1;entryY=0.5;" value="Crystallized → Next Prompt Recall">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="20" y="-20" as="offset" />
+            <Array as="points">
+              <mxPoint x="1330" y="996" />
+              <mxPoint x="1330" y="215" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

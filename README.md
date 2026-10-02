@@ -423,7 +423,8 @@ python scripts/build_knowledge_base.py
 ├── assets/                   # Architecture diagrams and vector visual assets
 │   ├── architecture.drawio   # Native Draw.io XML architecture source
 │   ├── architecture.drawio.png # Visual graphic embedded in documentation
-│   └── knowledge_pipeline.drawio # Knowledge ingestion lifecycle topology
+│   ├── knowledge_pipeline.drawio # Flow 1: Knowledge ingestion lifecycle topology
+│   └── prompt_flow.drawio    # Flow 2: User prompt processing lifecycle
 ├── configs/                  # Client configurations for every major LLM platform
 │   ├── sources.example.yaml  # Ingestion manifest template (copy to sources.local.yaml)
 │   ├── claude_desktop_config.json # Claude Desktop & Claude Code MCP configuration
