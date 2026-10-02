@@ -76,6 +76,8 @@ vault_template/04-Agent-Memory/Archive/
 vault_template/04-Agent-Memory/Consolidation-Reports/
 vault_template/04-Agent-Memory/telemetry.jsonl
 vault_template/00-Meta/*.local.md
+configs/*.local.yaml
+configs/*.local.json
 user_vault/
 data/
 .*.drawio.bkp
