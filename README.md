@@ -22,13 +22,6 @@ Standard LLMs suffer from three fundamental limitations:
 - **System 1 (Laya - Fast Reflex Engine, ~33–45ms)**: Runs locally. Triage, query routing, document novelty gating, blast-radius risk scoring, and memory distillation happen before calling expensive LLMs.
 - **System 2 (Deep Reasoning & Multi-Engine Grounding)**: Combines compiler-grade AST code intelligence, semantic GraphRAG, and a persistent Obsidian markdown vault.
 
-<p align="center">
-  <img src="assets/architecture.drawio.png" alt="2ndBrain Dual-Process Cognitive Architecture" width="100%">
-</p>
-<p align="center">
-  <i>Editable diagrams available in <a href="assets/architecture.drawio">Draw.io XML</a> and <a href="assets/architecture.drawio.svg">Vector SVG</a></i>
-</p>
-
 ---
 
 ## 🧱 The 6 Architectural Layers
