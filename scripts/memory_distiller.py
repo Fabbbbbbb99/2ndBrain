@@ -38,8 +38,7 @@ class ConversationalMemoryDistiller:
         self.decisions_dir = self.memory_dir / "02-Decisions"
         self.facts_dir = self.memory_dir / "03-Facts"
         self.skills_dir = self.memory_dir / "04-Skills"
-        # Legacy & Auxiliary memory directories for continuity
-        self.corrections_dir = self.memory_dir / "Corrections"
+        # Auxiliary memory directories
         self.sessions_dir = self.memory_dir / "Sessions"
         self.archive_dir = self.memory_dir / "Archive"
         self.reports_dir = self.memory_dir / "Consolidation-Reports"
@@ -48,7 +47,7 @@ class ConversationalMemoryDistiller:
 
         # Ensure all directories exist
         for d in [self.tasks_dir, self.decisions_dir, self.facts_dir, self.skills_dir,
-                 self.corrections_dir, self.sessions_dir, self.archive_dir, self.reports_dir,
+                 self.sessions_dir, self.archive_dir, self.reports_dir,
                  self.concepts_decisions_dir, self.guidelines_dir]:
             d.mkdir(parents=True, exist_ok=True)
 
@@ -167,7 +166,6 @@ class ConversationalMemoryDistiller:
             list(self.decisions_dir.glob("*.md")) +
             list(self.facts_dir.glob("*.md")) +
             list(self.skills_dir.glob("*.md")) +
-            list(self.corrections_dir.glob("*.md")) +
             list(self.concepts_decisions_dir.glob("*.md"))
         )
         new_rule_lower = new_rule.lower()
@@ -279,7 +277,8 @@ class ConversationalMemoryDistiller:
         elif m_type in ("skill", "workflow"):
             target_path = self.skills_dir / file_name
         else:
-            target_path = self.corrections_dir / file_name
+            target_path = self.facts_dir / file_name
+            m_type = "fact"
 
         supersedes_ref = None
         if matched_note and not is_reinforce:
@@ -581,7 +580,7 @@ tags:
         today = datetime.now(timezone.utc).date()
 
         all_notes = [
-            p for p in (list(self.corrections_dir.glob("*.md")) + list(self.decisions_dir.glob("*.md")))
+            p for p in (list(self.decisions_dir.glob("*.md")) + list(self.facts_dir.glob("*.md")) + list(self.skills_dir.glob("*.md")))
             if p.name.lower() not in ("readme.md", "index.md")
         ]
 
@@ -807,7 +806,6 @@ dry_run: {str(dry_run).lower()}
             list(self.decisions_dir.glob("*.md")) +
             list(self.facts_dir.glob("*.md")) +
             list(self.skills_dir.glob("*.md")) +
-            list(self.corrections_dir.glob("*.md")) +
             list(self.concepts_decisions_dir.glob("*.md")) +
             list(self.sessions_dir.glob("*.md"))
         )

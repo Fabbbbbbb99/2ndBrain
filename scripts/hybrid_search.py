@@ -209,10 +209,7 @@ class HybridSearchEngine:
         """
         if not file_path.exists() or file_path.suffix != ".md":
             return False
-        if file_path.name.lower() == "readme.md" and file_path.parent.name in (
-            "Architecture", "Decisions", "Blast-Radius-Logs", "Modules", 
-            "Papers", "Transcripts", "Corrections", "Sessions"
-        ):
+        if file_path.name.lower() == "readme.md":
             return False
 
         rel_path = file_path.relative_to(self.vault_dir).as_posix()

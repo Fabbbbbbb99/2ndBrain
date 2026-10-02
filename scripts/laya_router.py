@@ -415,12 +415,16 @@ class LayaDecisionEngine:
         Which vault category does this note belong to?
         """
         combined = (title + " " + content[:500]).lower()
-        if "decision" in combined or "adr" in combined:
+        if "task" in combined or "todo" in combined:
+            return "04-Agent-Memory/01-Tasks"
+        elif "decision" in combined or "adr" in combined:
             return "01-Concepts/Decisions"
         elif "transcript" in combined or "consultation" in combined or "meeting" in combined:
             return "03-Sources/Transcripts"
-        elif "rule" in combined or "preference" in combined or "correction" in combined:
-            return "04-Agent-Memory/Corrections"
+        elif "skill" in combined or "recipe" in combined or "procedure" in combined:
+            return "04-Agent-Memory/04-Skills"
+        elif "rule" in combined or "preference" in combined or "fact" in combined or "correction" in combined:
+            return "04-Agent-Memory/03-Facts"
         elif "module" in combined or "ast" in combined or "class" in combined or "function" in combined:
             return "02-Codebase/Modules"
         else:

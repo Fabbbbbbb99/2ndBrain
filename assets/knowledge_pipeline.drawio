@@ -42,7 +42,7 @@
         </mxCell>
 
         <!-- Stages 6 & 7 (Conversational Memory) -->
-        <mxCell id="s6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#8b5cf6;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='font-size: 14px; color: #a78bfa;'&gt;6. Conversational Memory &amp; Sessions&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 11px;'&gt;Laya Neural Triage (P &gt;= 0.70 durable constraints)&lt;br&gt;&lt;code style='color: #c4b5fd;'&gt;04-Agent-Memory/Corrections (Active Rules)&lt;br&gt;04-Agent-Memory/Sessions (Dialogue Archival)&lt;/code&gt;&lt;/span&gt;" vertex="1">
+        <mxCell id="s6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#8b5cf6;strokeWidth=1.5;fontColor=#f8fafc;arcSize=14;" value="&lt;b style='font-size: 14px; color: #a78bfa;'&gt;6. Conversational Memory &amp; Sessions&lt;/b&gt;&lt;br&gt;&lt;span style='color: #94a3b8; font-size: 11px;'&gt;Laya Neural Triage (P &gt;= 0.70 durable constraints)&lt;br&gt;&lt;code style='color: #c4b5fd;'&gt;04-Agent-Memory (4-Pillar Rules &amp;amp; ADRs)&lt;br&gt;04-Agent-Memory/Sessions (Dialogue Archival)&lt;/code&gt;&lt;/span&gt;" vertex="1">
           <mxGeometry x="780" y="170" width="340" height="85" as="geometry" />
         </mxCell>
 

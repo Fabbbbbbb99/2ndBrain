@@ -29,7 +29,6 @@ Map of Content for the local-first persistent memory engine. Structured across *
 ---
 
 ## 📂 Auxiliary Memory Repositories
-- **`Corrections/`**: Ephemeral user corrections and behavioral rules distilled from live conversation turns.
 - **`Sessions/`**: Compacted historical session transcripts and multi-agent dialogue archives.
 - **`Consolidation-Reports/`**: Audit logs generated during the periodic "Sleep Cycle" memory consolidation.
 - **`Archive/`**: Superseded and decayed rules preserved for historical reference.
