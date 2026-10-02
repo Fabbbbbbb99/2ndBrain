@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-gsd_task.py - GSD (Get Stuff Done) Task Engine for Robbie & 2ndBrain.
+gsd_task.py - GSD (Get Stuff Done) Task Engine for 2ndBrain.
 Enforces Rule 6 (ADHD 5-Step Ceiling) and Rule 8 (GSD Atomic Work-Units).
 """
 
