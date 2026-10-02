@@ -330,13 +330,13 @@ class UniversalKnowledgeIngester:
         slug = re.sub(r'[-\s]+', '-', s)
         return slug[:65].rstrip('-')
 
-    def ingest_document(self, file_path: Path) -> Optional[Dict[str, Any]]:
+    def ingest_document(self, file_path: Path, custom_title: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """Ingests a single document (.pdf, .txt, .md) into the vault with table & equation preservation."""
-        doc_name = file_path.stem
+        doc_name = custom_title if custom_title else file_path.stem
         clean_title = self.sanitize_title(doc_name)
         doc_slug = self.slugify(clean_title)
 
-        print(f"\n[Ingester] Processing: {file_path.name}")
+        print(f"\n[Ingester] Processing: {clean_title} ({file_path.name})")
 
         full_text = ""
         total_pages = 1

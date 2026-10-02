@@ -21,8 +21,54 @@ The knowledge base is currently in a clean baseline state.
 - 🧠 **[[04-Agent-Memory-MOC|04-Agent-Memory (4-Pillar Memory Ontology)]]**: Dynamic, self-evolving tasks, decisions, facts, and skills learned across conversations.
 - ⚙️ **[[00-Meta/System-Rules|System Rules for LLMs]]**: Operational protocol for AI models reading and writing to this vault.
 - 📋 **[[00-Meta/Templates/Template-GSD-Task|Template: GSD Task]]**: Standard schema for atomic, time-boxed agent tasks.
+- 🧮 **[[01-Concepts/Algorithms/Algorithms-MOC|Algorithms & Data Structures (MOC)]]**: Theoretical foundations from MIT 6.006 and MIT 6.046J.
 
 ## 📚 Ingested Knowledge Bases
+- 📘 [[MIT-6046J-Lec-24-Cache-Oblivious-Algorithms-and-Memory-Layouts-MOC|MIT 6.046J Lec 24 Cache Oblivious Algorithms and Memory Layouts]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-22-Dynamic-Multithreaded-Algorithms-Work-Span-MOC|MIT 6.046J Lec 22 Dynamic Multithreaded Algorithms Work Span]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-19-All-Pairs-Shortest-Paths-Floyd-Warshall-Johnson-MOC|MIT 6.046J Lec 19 All Pairs Shortest Paths Floyd Warshall Johnson]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-18-Shortest-Paths-Bellman-Ford-Linear-Programming-MOC|MIT 6.046J Lec 18 Shortest Paths Bellman Ford Linear Programming]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-17-Shortest-Paths-Dijkstra-BFS-Properties-MOC|MIT 6.046J Lec 17 Shortest Paths Dijkstra BFS Properties]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-16-Greedy-Algorithms-Minimum-Spanning-Trees-MOC|MIT 6.046J Lec 16 Greedy Algorithms Minimum Spanning Trees]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-15-Dynamic-Programming-Longest-Common-Subseq-MOC|MIT 6.046J Lec 15 Dynamic Programming Longest Common Subseq]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-14-Competitive-Analysis-Self-Organizing-Lists-MOC|MIT 6.046J Lec 14 Competitive Analysis Self Organizing Lists]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-13-Amortized-Analysis-Potential-Method-MOC|MIT 6.046J Lec 13 Amortized Analysis Potential Method]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-12-Skip-Lists-Randomized-Search-MOC|MIT 6.046J Lec 12 Skip Lists Randomized Search]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-11-Augmenting-Data-Structures-Interval-Trees-MOC|MIT 6.046J Lec 11 Augmenting Data Structures Interval Trees]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-10-Red-Black-Trees-Rotations-Insertions-MOC|MIT 6.046J Lec 10 Red Black Trees Rotations Insertions]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-09-Relation-of-BSTs-to-Quicksort-MOC|MIT 6.046J Lec 09 Relation of BSTs to Quicksort]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-08-Universal-and-Perfect-Hashing-MOC|MIT 6.046J Lec 08 Universal and Perfect Hashing]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-07-Hashing-Hash-Functions-Universal-Hashing-MOC|MIT 6.046J Lec 07 Hashing Hash Functions Universal Hashing]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-06-Order-Statistics-Median-Selection-MOC|MIT 6.046J Lec 06 Order Statistics Median Selection]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-05-Linear-Time-Sorting-Radix-Sort-Lower-Bounds-MOC|MIT 6.046J Lec 05 Linear Time Sorting Radix Sort Lower Bounds]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-04-Quicksort-Randomized-Algorithms-MOC|MIT 6.046J Lec 04 Quicksort Randomized Algorithms]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-03-Divide-and-Conquer-Strassen-Matrix-Mult-MOC|MIT 6.046J Lec 03 Divide and Conquer Strassen Matrix Mult]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-02-Recurrences-Substitution-Master-Method-MOC|MIT 6.046J Lec 02 Recurrences Substitution Master Method]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6046J-Lec-01-Asymptotic-Analysis-Insertion-Mergesort-MOC|MIT 6.046J Lec 01 Asymptotic Analysis Insertion Mergesort]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-24-Topics-in-Algorithms-Research-MOC|MIT 6.006 Lec 24 Topics in Algorithms Research]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-23-Computational-Complexity-P-vs-NP-MOC|MIT 6.006 Lec 23 Computational Complexity P vs NP]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-22-Dynamic-Programming-IV-Guitar-Fingering-Tetris-MOC|MIT 6.006 Lec 22 Dynamic Programming IV Guitar Fingering Tetris]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-21-Dynamic-Programming-III-Knapsack-Edit-Distance-MOC|MIT 6.006 Lec 21 Dynamic Programming III Knapsack Edit Distance]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-20-Dynamic-Programming-II-Text-Justification-Blackja-MOC|MIT 6.006 Lec 20 Dynamic Programming II Text Justification Blackjack]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-19-Dynamic-Programming-I-Fibonacci-Shortest-Paths-MOC|MIT 6.006 Lec 19 Dynamic Programming I Fibonacci Shortest Paths]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-18-Speeding-Up-Dijkstra-Bidirectional-Search-MOC|MIT 6.006 Lec 18 Speeding Up Dijkstra Bidirectional Search]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-17-Bellman-Ford-Negative-Weight-Cycles-MOC|MIT 6.006 Lec 17 Bellman Ford Negative Weight Cycles]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-16-Dijkstra-Algorithm-Priority-Queue-MOC|MIT 6.006 Lec 16 Dijkstra Algorithm Priority Queue]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-15-Single-Source-Shortest-Paths-DAGs-MOC|MIT 6.006 Lec 15 Single Source Shortest Paths DAGs]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-14-Depth-First-Search-DFS-Topological-Sorting-MOC|MIT 6.006 Lec 14 Depth First Search DFS Topological Sorting]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-13-Breadth-First-Search-BFS-Shortest-Paths-MOC|MIT 6.006 Lec 13 Breadth First Search BFS Shortest Paths]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-12-Square-Roots-Newtons-Method-MOC|MIT 6.006 Lec 12 Square Roots Newtons Method]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-11-Integer-Arithmetic-Karatsuba-Multiplication-MOC|MIT 6.006 Lec 11 Integer Arithmetic Karatsuba Multiplication]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-10-Open-Addressing-Cryptographic-Hashing-MOC|MIT 6.006 Lec 10 Open Addressing Cryptographic Hashing]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-09-Table-Doubling-Karp-Rabin-String-Matching-MOC|MIT 6.006 Lec 09 Table Doubling Karp Rabin String Matching]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-08-Hashing-with-Chaining-MOC|MIT 6.006 Lec 08 Hashing with Chaining]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-07-Counting-Sort-Radix-Sort-MOC|MIT 6.006 Lec 07 Counting Sort Radix Sort]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-06-AVL-Balanced-Trees-AVL-Sort-MOC|MIT 6.006 Lec 06 AVL Balanced Trees AVL Sort]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-05-Binary-Search-Trees-BST-Sort-MOC|MIT 6.006 Lec 05 Binary Search Trees BST Sort]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-04-Heaps-and-Heap-Sort-Priority-Queues-MOC|MIT 6.006 Lec 04 Heaps and Heap Sort Priority Queues]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-03-Insertion-Sort-Merge-Sort-MOC|MIT 6.006 Lec 03 Insertion Sort Merge Sort]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-02-Models-of-Computation-Document-Distance-MOC|MIT 6.006 Lec 02 Models of Computation Document Distance]]: Complete concept overview and source extracts.
+- 📘 [[MIT-6006-Lec-01-Algorithmic-Thinking-Peak-Finding-MOC|MIT 6.006 Lec 01 Algorithmic Thinking Peak Finding]]: Complete concept overview and source extracts.
 - 📘 [[Intermediate-MOC|Intermediate]]: Complete concept overview and source extracts.
 - 📘 [[About-Topic-Statistics-MOC|About-Topic-Statistics]]: Complete concept overview and source extracts.
 - 📘 [[About-Tf2-MOC|About-Tf2]]: Complete concept overview and source extracts.
@@ -270,3 +316,26 @@ The knowledge base is currently in a clean baseline state.
 - [[05-lecture-5-model-free-control-Overview]] (`05-lecture-5-model-free-control`)
 - [[050-ros-rpc-design-MOC]] (`050-ros-rpc-design`)
 - [[050-ros-rpc-design-Overview]] (`050-ros-rpc-design`)
+
+### 📦 Auto-Discovered Unindexed Notes
+
+- [[055-ros-parameter-design-MOC]] (`055-ros-parameter-design`)
+- [[055-ros-parameter-design-Overview]] (`055-ros-parameter-design`)
+- [[06-lecture-6-value-function-approx-MOC]] (`06-lecture-6-value-function-approx`)
+- [[06-lecture-6-value-function-approx-Overview]] (`06-lecture-6-value-function-approx`)
+- [[060-ros-middleware-interface-MOC]] (`060-ros-middleware-interface`)
+- [[060-ros-middleware-interface-Overview]] (`060-ros-middleware-interface`)
+- [[07-lecture-7-policy-gradient-MOC]] (`07-lecture-7-policy-gradient`)
+- [[07-lecture-7-policy-gradient-Overview]] (`07-lecture-7-policy-gradient`)
+- [[08-lecture-8-integrating-learning-planning-MOC]] (`08-lecture-8-integrating-learning-planning`)
+- [[08-lecture-8-integrating-learning-planning-Overview]] (`08-lecture-8-integrating-learning-planning`)
+- [[080-ros-documentation-system-MOC]] (`080-ros-documentation-system`)
+- [[080-ros-documentation-system-Overview]] (`080-ros-documentation-system`)
+- [[09-lecture-9-exploration-exploitation-MOC]] (`09-lecture-9-exploration-exploitation`)
+- [[09-lecture-9-exploration-exploitation-Overview]] (`09-lecture-9-exploration-exploitation`)
+- [[10-lecture-10-classic-games-MOC]] (`10-lecture-10-classic-games`)
+- [[10-lecture-10-classic-games-Overview]] (`10-lecture-10-classic-games`)
+- [[100-ament-MOC]] (`100-ament`)
+- [[100-ament-Overview]] (`100-ament`)
+- [[101-build-tool-MOC]] (`101-build-tool`)
+- [[101-build-tool-Overview]] (`101-build-tool`)

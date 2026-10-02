@@ -34,15 +34,16 @@ Framework standards enforced:
    - Maintained `scripts/build_knowledge_base.py` covering books (Boyd, David Silver, Russ Tedrake, Strogatz, Fossen), Lie theory (Pinocchio, Micro Lie), ROS REPs, and ROS 2 design architectures.
    - Un-ignored `!scripts/build_knowledge_base.py` in `.gitignore`.
 
-### B. Full Knowledge Base Re-Ingestion
-- **Total Ingested Documents**: 260 documents.
-- **Total Vault Notes**: 1,101 notes.
+### B. Knowledge Base & Curriculum Ingestion
+- **Total Ingested Documents**: 305 documents (added 45 curated lectures from MIT 6.006 & MIT 6.046J).
+- **Total Vault Notes**: 1,237 notes.
+- **Algorithms Hub**: Synthesized `01-Concepts/Algorithms/Algorithms-MOC.md` mapping graph traversals, shortest paths (Dijkstra, Bellman-Ford), heaps, balanced trees, and dynamic programming directly to `ompl`, `nanoflann`, `octomap`, and `TheAlgorithms`.
 - **Vault Linter Audit**: **100/100 [🟢 EXCELLENT]** (0 broken links, 0 island notes, 0 frontmatter errors, 0 AI slop phrases).
-- **Hybrid Vector Index**: Parent-child dense + BM25 embeddings generated in `vault_vectors.db`.
+- **Hybrid Vector Index**: Parent-child dense + BM25 embeddings updated in `vault_vectors.db`.
 
 ### C. Repository Synchronization
 - Synced `scripts/`, `.gitignore`, `vault_template/00-Meta/`, and `handoff.md` to `C:\Users\Fabian\Desktop\Y2T1\RSE2802 Concept Defintion\Second Brain`.
-- Pre-commit hook installed and verified across both repositories.
+- Pre-commit hook active across both repositories.
 
 ---
 
