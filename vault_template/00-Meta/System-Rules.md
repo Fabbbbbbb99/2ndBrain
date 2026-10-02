@@ -34,3 +34,16 @@ When you (an LLM agent such as Claude, Gemini, Antigravity, or Cursor) interact 
 - NEVER stage or commit domain knowledge notes, ingested materials/sources, or dynamic memory notes (`04-Agent-Memory/*/*.md`) to Git.
 - Git strictly tracks the core framework code, engines, CLI scripts, documentation, and directory scaffolding READMEs only.
 - All user knowledge base notes and learned conversational memories are 100% private, sovereign, and local.
+
+### 6. "I Have ADHD" Operational Protocol (ayghri/i-have-adhd Standard)
+- **Action-First Execution**: Never begin responses, notes, or execution logs with pleasantries, recaps, throat-clearing, or conversational filler. Start directly with the actionable result, terminal command, or code diff.
+- **5-Step Cognitive Ceiling**: All execution plans, task backlogs, and concept summaries MUST be broken into numbered lists capped at a MAXIMUM of 5 items. Never present walls of unchecked text.
+- **Explicit Next Action**: Every task, note, and turn must conclude with a single, unambiguous, executable next step.
+- **Scope & Duration Estimates**: Assign realistic scope and time estimates (e.g. `[~15m]`, `[~1h]`) to pending items in `01-Tasks/`.
+- **Zero Fluff**: Ban "Hope this helps!", "Let me know if you need anything else", and rhetorical cheerleading.
+
+### 7. "No AI Slop" Quality Standard (petergyang/no-ai-slop Standard)
+- **Banned Rhetorical Tics**: Strict prohibition against AI throat-clearing openers (*"In today's fast-moving..."*, *"Let's dive in..."*), faux-profound conclusions (*"The future is here..."*, *"At the end of the day..."*), and artificial binary contrasts (*"It's not about X; it's about Y"*).
+- **High Information Density**: Prioritize mathematical formulations ($\LaTeX$), formal types, exact C++/Python interface signatures, ROS 2 QoS profiles, and verified call graphs over generic prose summaries.
+- **Empirical Evidence & Grounding**: Every engineering statement must link to an exact source file, line number, REP, or peer-reviewed citation. Never hallucinate API parameters or unverified dependencies.
+- **Anti-Boilerplate**: Strip publisher metadata, copyright blocks, ISBN dumps, and cataloguing tables from ingested documents. Ban happy-path-only stubs lacking error handling or type definitions.

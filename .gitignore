@@ -49,6 +49,7 @@ scripts/build_*.py
 scripts/ocr_*.py
 scripts/clone_*.py
 !scripts/ingest_knowledge.py
+!scripts/build_knowledge_base.py
 
 # --- Ignore Ingested Knowledge Base (ISO, INCOSE, ANSI, etc.) ---
 # Preserve directory scaffolding & placeholder READMEs, ignore ingested concept notes

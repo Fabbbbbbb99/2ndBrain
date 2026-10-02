@@ -39,10 +39,17 @@ class VaultLinter:
         except Exception:
             return set(), {}, False
 
+        # Strip code blocks and mermaid directives so internal diagram/code syntax isn't misidentified as wikilinks
+        content_no_code = re.sub(r'```.*?```', '', content, flags=re.DOTALL)
+        content_no_code = re.sub(r'\.\. mermaid::.*?(?=\n\S|\Z)', '', content_no_code, flags=re.DOTALL)
+
         # Extract wikilinks
-        raw_links = self.wikilink_pattern.findall(content)
+        raw_links = self.wikilink_pattern.findall(content_no_code)
         clean_links = set()
         for link in raw_links:
+            # Skip citation/footnote reference link syntax like [[1][fourmy19]]
+            if "][" in link or link.startswith("[") or link.endswith("]"):
+                continue
             # Handle aliases: [[TargetNote|Display Name]] or [[TargetNote#Section]]
             target = link.split("|")[0].split("#")[0].strip()
             if target:
@@ -96,7 +103,7 @@ class VaultLinter:
             outgoing_edges[file_path] = links
 
             # Check schema compliance (ignore top-level README.md and system rules)
-            if file_path.name.lower() not in ("readme.md", "index.md", "index.local.md"):
+            if file_path.name.lower() not in ("readme.md", "index.md", "index.local.md", "system-rules.md"):
                 if not has_valid_fm:
                     schema_issues.append({
                         "file": file_path.relative_to(self.vault_dir),
@@ -107,6 +114,29 @@ class VaultLinter:
                         "file": file_path.relative_to(self.vault_dir),
                         "issue": "Frontmatter missing 'type' or 'tags' metadata"
                     })
+
+                # Check for AI Slop markers in content
+                try:
+                    raw_text = file_path.read_text(encoding="utf-8", errors="ignore")
+                    slop_matches = []
+                    for sp in [
+                        r"\bhere'?s the thing\b",
+                        r"\bin today'?s fast-paced\b",
+                        r"\bit'?s not (?:just )?about [^,\n]+, it'?s about\b",
+                        r"\bthe future isn'?t coming\b",
+                        r"\blet me be clear\b",
+                        r"\bhope this helps\b",
+                        r"\bwithout further ado\b"
+                    ]:
+                        if re.search(sp, raw_text, re.IGNORECASE):
+                            slop_matches.append(sp)
+                    if slop_matches:
+                        schema_issues.append({
+                            "file": file_path.relative_to(self.vault_dir),
+                            "issue": f"Contains prohibited AI slop phrases: {len(slop_matches)} detected"
+                        })
+                except Exception:
+                    pass
 
             # Check links
             for target in links:

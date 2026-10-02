@@ -39,13 +39,51 @@ except ImportError:
     OCR_AVAILABLE = False
 
 
+BOILERPLATE_PATTERNS = [
+    r'(?i)Authorized licensed use limited to:.*?\n',
+    r'(?i)Downloaded by .*?\n',
+    r'©\s*.*?\n',
+    r'(?i)Cambridge University Press.*?\n',
+    r'(?i)The Edinburgh Building, Cambridge.*?\n',
+    r'(?i)Published in the United States.*?\n',
+    r'(?i)Information on this title:.*?\n',
+    r'(?i)Library of Congress Cataloguing-in-Publication data.*?\n',
+    r'(?i)A catalogue record for this publication.*?\n',
+    r'(?i)This publication is in copyright.*?\n',
+    r'(?i)Subject to statutory exception.*?\n',
+    r'(?i)no reproduction of any part may take place.*?\n',
+    r'(?i)ISBN\s*(?:-13:)?\s*[\d-]+\s*(?:hardback|paperback|ebook)?\n?',
+    r'(?i)QA\d+[\.\d\w-]+\s*\d{4}\n?',
+    r'(?i)Department of Electrical Engineering.*?\n',
+    r'(?i)Electrical Engineering Department.*?\n',
+    r'(?i)Printed in the United Kingdom.*?\n',
+    r'(?i)CambridgeUniversityPress.*?\n',
+    r'(?i)First published \d{4}.*?\n',
+    r'(?i)All rights reserved.*?\n',
+    r'(?i)arXiv:\d+\.\d+v\d+.*?\n',
+]
+
+SLOP_PATTERNS = [
+    r'(?i)\bhere\'?s the thing:?\s*',
+    r'(?i)\bin today\'?s (?:fast-paced|world|landscape|robotics)\b',
+    r'(?i)\bit\'?s not (?:just )?about [^,\n]+, it\'?s about [^.\n]+\.?\s*',
+    r'(?i)\bthe future (?:of [^.\n]+)? isn\'?t coming, it\'?s already here\.?\s*',
+    r'(?i)\blet me be clear:?\s*',
+    r'(?i)\bhope this helps!?\s*',
+    r'(?i)\bat the end of the day,?\s*',
+    r'(?i)\bwithout further ado,?\s*',
+    r'(?i)\bin this (?:section|chapter|document), we (?:will )?dive deep into\b',
+]
+
+
 def clean_text(text: str) -> str:
-    """Removes typical copyright banners, watermark noise, and redundant newlines."""
+    """Removes boilerplate, copyright watermarks, and AI slop patterns."""
     if not text:
         return ""
-    text = re.sub(r'Authorized licensed use limited to:.*?\n', '', text)
-    text = re.sub(r'Downloaded by .*?\n', '', text)
-    text = re.sub(r'©\s*.*?\n', '', text)
+    for pat in BOILERPLATE_PATTERNS:
+        text = re.sub(pat, '', text)
+    for pat in SLOP_PATTERNS:
+        text = re.sub(pat, '', text)
     text = re.sub(r'\n{3,}', '\n\n', text)
     return text.strip()
 
@@ -333,17 +371,44 @@ class UniversalKnowledgeIngester:
         target_concept_dir.mkdir(parents=True, exist_ok=True)
         target_source_dir.mkdir(parents=True, exist_ok=True)
 
+        # 1. Clean and filter paragraphs for genuine conceptual signal
+        raw_paragraphs = [re.sub(r'\s+', ' ', p).strip() for p in full_text.split("\n\n") if len(p.strip()) > 70]
+        valid_paragraphs = []
+        for p in raw_paragraphs:
+            p_lower = p.lower()
+            # Filter out copyright, cataloguing, and publisher frontmatter
+            if any(term in p_lower for term in [
+                "isbn", "cataloguing", "copyright", "published by", "all rights reserved",
+                "contents", "table of contents", "preface to the", "printed in",
+                "department of electrical", "university press", "author index", "subject index",
+                "cambridge university", "stephen boyd", "lieven vandenberghe", "p. cm.", "qa402"
+            ]):
+                continue
+            if re.search(r'\.\s*\.\s*\.\s*\.', p): # TOC dots
+                continue
+            cleaned_p = clean_text(p)
+            if len(cleaned_p) > 80 and (cleaned_p.endswith('.') or '.' in cleaned_p):
+                valid_paragraphs.append(cleaned_p)
+
         # 1. Write Raw Source File in 03-Sources/
         source_note_name = f"{doc_slug}-Source.md"
         source_note_path = target_source_dir / source_note_name
+        source_body = clean_text(full_text[:35000])
+        if valid_paragraphs and valid_paragraphs[0] in source_body:
+            idx_start = source_body.find(valid_paragraphs[0])
+            if idx_start > 0:
+                source_body = source_body[idx_start:]
+
         source_content = f"""---
 title: "{clean_title} - Primary Source Extract"
+type: source
+status: active
 source_file: "{file_path.name}"
 total_pages: {total_pages}
 tables_preserved: {tables_found}
 tags:
-  - source/document
-  - reference
+  - second-brain/source
+  - reference/document
 ---
 
 # {clean_title} - Source Extract
@@ -353,7 +418,7 @@ tags:
 ---
 
 ## Verbatim Extraction
-{clean_text(full_text[:35000])}
+{source_body}
 """
         source_note_path.write_text(source_content, encoding="utf-8")
 
@@ -361,48 +426,74 @@ tags:
         concept_note_name = f"{doc_slug}-Overview.md"
         concept_note_path = target_concept_dir / concept_note_name
         
-        # Sample first few paragraphs for summary
-        paragraphs = [p.strip() for p in full_text.split("\n\n") if len(p.strip()) > 80]
-        summary_intro = "\n\n".join(paragraphs[:3]) if paragraphs else full_text[:500]
+        # Build "I Have ADHD" Action-First Executive Takeaways (Max 5 items)
+        summary_intro = "\n\n".join(valid_paragraphs[:2]) if valid_paragraphs else clean_text(full_text[:400])
+        takeaways = []
+        for idx, p in enumerate(valid_paragraphs[:5]):
+            first_sentence = p.split(". ")[0].strip()
+            if len(first_sentence) > 20:
+                detail = p.split(". ")[1][:140] if len(p.split(". ")) > 1 else ""
+                takeaways.append(f"{idx+1}. **{first_sentence[:95]}**: {detail}")
+        
+        if not takeaways:
+            takeaways = [
+                f"1. **Core Problem**: Primary formulation and engineering specifications for {clean_title}.",
+                f"2. **Governing Model**: Mathematical, interface, or algorithmic conventions defined in `{file_path.name}`.",
+                f"3. **Operational Scope**: Ingests {total_pages} pages with {tables_found} structured data tables preserved.",
+                f"4. **Robotics Relevance**: Direct guidance for state estimation, navigation, and system control.",
+                f"5. **Actionable Next Step**: Consult primary extract in [[{doc_slug}-Source]] for implementation details."
+            ]
+        takeaways_md = "\n".join(takeaways[:5])
 
         concept_content = f"""---
 title: "{clean_title} - Concept Overview"
+type: concept
+status: active
+domain: robotics
 tables_preserved: {tables_found}
 tags:
+  - second-brain/concept
   - concept/{doc_slug}
   - knowledge-base
 ---
 
 # {clean_title}
 
-## 1. Executive Summary & Purpose
+## ⚡ Quick Reference & Executive Takeaways (Max 5 Actions)
+{takeaways_md}
+
+---
+
+## 1. High-Density Executive Summary
 {summary_intro}
 
 ---
 
-## 2. Key Architectural & Operational Topics
-- Primary Source Extract: [[{doc_slug}-Source]]
-- Total Document Scope: {total_pages} pages / ~{len(full_text.split())} words
-- Preserved Structured Tables: {tables_found}
+## 2. Core Architecture & Verification Scope
+- **Primary Source Extract**: [[{doc_slug}-Source]]
+- **Document Scope**: {total_pages} pages / ~{len(full_text.split())} words
+- **Preserved Tables**: {tables_found} structured tables
 
 ```mermaid
 flowchart TD
-    Doc["{clean_title}"] --> S1["Core Principles & Requirements"]
-    Doc --> S2["Processes & Workflows"]
-    Doc --> S3["Verification & Operational Context"]
+    Doc["{clean_title}"] --> S1["1. Mathematical Formulations & Standards"]
+    Doc --> S2["2. Operational Interfaces & Dynamics"]
+    Doc --> S3["3. Verification & Execution Criteria"]
 ```
 
 ---
 
-## 3. Normative Extract & Definitions
-{paragraphs[3] if len(paragraphs) > 3 else ''}
+## 3. Normative Technical Content & Formulas
+{valid_paragraphs[2] if len(valid_paragraphs) > 2 else ''}
 
-{paragraphs[4] if len(paragraphs) > 4 else ''}
+{valid_paragraphs[3] if len(valid_paragraphs) > 3 else ''}
 
 ---
-*Related Links*:
-- [[{doc_slug}-MOC]]
-- [[00-Meta/Index]]
+
+## 🔗 Actionable Navigation & Related Links (Max 5)
+- 📐 **Domain MOC**: [[{doc_slug}-MOC]]
+- 🎙️ **Source Document**: [[{doc_slug}-Source]]
+- 🗺️ **Master Index**: [[00-Meta/Index]]
 """
         concept_note_path.write_text(concept_content, encoding="utf-8")
 

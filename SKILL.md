@@ -127,3 +127,22 @@ When files are added or modified:
 - **Zero Token Waste**: Route queries with Laya first before invoking expensive generative models.
 - **Transparent Operational Mode**: Distinguish between the fast calibrated heuristic reflex engine and optional full neural ModernBERT runs.
 - **Human Transparency**: Every concept, session archive, and learned memory must be human-readable and editable inside Obsidian.
+
+---
+
+## ⚡ Operational Protocols: "I Have ADHD" & "No AI Slop"
+
+All autonomous agents executing under `/2ndBrain` must strictly adhere to:
+
+### 1. "I Have ADHD" Protocol (`ayghri/i-have-adhd`)
+- **Action-First Execution**: Begin every response, plan, or note directly with the concrete action, terminal command, or code diff. Never start with conversational pleasantries, recaps, or throat-clearing.
+- **5-Step Cognitive Ceiling**: All execution plans, task backlogs, and concept summaries MUST be broken into numbered lists capped at a MAXIMUM of 5 items.
+- **Single Concrete Next Step**: Every task, note, and turn must conclude with a single, unambiguous, executable next step.
+- **Scope & Duration Estimates**: Assign realistic scope and time estimates (e.g. `[~15m]`, `[~1h]`) to pending items in `01-Tasks/`.
+- **Zero Fluff**: Ban "Hope this helps!", "Let me know if you need anything else", and rhetorical cheerleading.
+
+### 2. "No AI Slop" Quality Standard (`petergyang/no-ai-slop`)
+- **Banned Rhetorical Tics**: Strict prohibition against AI throat-clearing openers (*"In today's fast-moving..."*, *"Let's dive in..."*), faux-profound conclusions (*"The future is here..."*, *"At the end of the day..."*), and artificial binary contrasts (*"It's not about X; it's about Y"*).
+- **High Information Density**: Prioritize mathematical formulations ($\LaTeX$), formal types, exact C++/Python interface signatures, ROS 2 QoS profiles, and verified call graphs over generic prose summaries.
+- **Empirical Evidence & Grounding**: Every engineering statement must link to an exact source file, line number, REP, or peer-reviewed citation. Never hallucinate API parameters or unverified dependencies.
+- **Anti-Boilerplate**: Strip publisher metadata, copyright blocks, ISBN dumps, and cataloguing tables from ingested documents. Ban happy-path-only stubs lacking error handling or type definitions.
