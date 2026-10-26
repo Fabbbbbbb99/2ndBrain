@@ -349,7 +349,7 @@ python -u scripts/gsd_task.py create "Implement Rate Limiter" --goal "Add Token 
 
 ---
 
-## 📂 Repository Scaffolding (Committed Files & Templates)
+## 📂 Repository Scaffolding
 
 The repository only tracks clean engine code, configurations, skills, and initial vault scaffolding templates. All local models (`models/`), raw materials (`source_materials/`), compiled databases (`build/`), local tests (`tests/`), local vector DBs (`vault_vectors.db`), and ingested documents are excluded via `.gitignore`:
 
