@@ -5,21 +5,24 @@
 # --- 1. System 1 Reflex Router & Neural Inference ---
 laya>=0.3.21                    # Fast reflex routing engine
 torch>=2.0.0                    # Neural backend for ModernBERT Laya fine-tuning
+transformers>=4.40.0            # Hugging Face transformers for model architecture & tokenizers
+safetensors>=0.4.0              # Safe model serialization format for ModernBERT weights
+huggingface-hub>=0.20.0          # Model repository client and cache manager
 
 # --- 2. Knowledge Graph & Code AST Engines ---
 graphifyy>=0.9.0                # Semantic GraphRAG network & community clustering
 code-review-graph>=2.0.0        # Tree-sitter AST call-graph & blast radius tracking
 
 # --- 3. Local Dense/Sparse Hybrid Retrieval ---
+numpy>=1.24.0                   # Vector math and cosine matrix operations
 fastembed>=0.8.0                # Offline BAAI/bge-small-en-v1.5 vector embeddings
 
 # --- 4. High-Fidelity PDF & Document Ingestion Cascade ---
-pymupdf4llm>=0.0.17             # Fast vector PDF markdown & layout extractor
-pymupdf>=1.24.0                 # PyMuPDF core rendering & table finder
+pymupdf>=1.24.0                 # PyMuPDF core digital text, table finder & pixmap rasterizer
+pdfplumber>=0.11.0              # Spatial coordinate vector table recovery fallback
 pypdf>=4.0.0                    # Pure Python PDF reading fallback
-pdfplumber>=0.11.0              # Spatial coordinate vector table recovery
 rapidocr-onnxruntime>=1.2.0     # OCR fallback for raster diagrams & scanned covers
-docling>=2.0.0                  # Deep learning OCR & TableFormer cascade (optional high-res)
+Pillow>=10.0.0                  # Image processing for raster diagrams and OCR
 
 # --- 5. Protocol & System Integration ---
 fastmcp>=3.0.0                  # Model Context Protocol server for Claude/Cursor
