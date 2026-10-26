@@ -1,24 +1,26 @@
-# --- Core 2ndBrain Engines & Graph Tools ---
-laya>=0.3.21
-torch>=2.0.0
-graphifyy>=0.3.10
-code-review-graph>=0.1.0
-onnxruntime>=1.18.0
-numpy>=1.26.0
-tokenizers>=0.19.0
-networkx>=3.2.0
-pyyaml>=6.0.0
-pydantic>=2.0.0
-click>=8.1.0
+# =============================================================================
+# SE_Brain Core Knowledge Base Dependencies
+# =============================================================================
 
-# --- Universal MCP Server (Claude, Cursor, Windsurf) ---
-mcp>=1.8.0
+# --- 1. System 1 Reflex Router & Neural Inference ---
+laya>=0.3.21                    # Fast reflex routing engine
+torch>=2.0.0                    # Neural backend for ModernBERT Laya fine-tuning
 
-# --- PDF Ingestion, Tables & Neural OCR ---
-pypdf>=4.0.0
-pdfplumber>=0.11.0
-pypdfium2>=5.0.0
-rapidocr-onnxruntime>=1.2.0
+# --- 2. Knowledge Graph & Code AST Engines ---
+graphifyy>=0.9.0                # Semantic GraphRAG network & community clustering
+code-review-graph>=2.0.0        # Tree-sitter AST call-graph & blast radius tracking
 
-# --- Local Hybrid Vector Embeddings ---
-fastembed>=0.8.0
+# --- 3. Local Dense/Sparse Hybrid Retrieval ---
+fastembed>=0.8.0                # Offline BAAI/bge-small-en-v1.5 vector embeddings
+
+# --- 4. High-Fidelity PDF & Document Ingestion Cascade ---
+pymupdf4llm>=0.0.17             # Fast vector PDF markdown & layout extractor
+pymupdf>=1.24.0                 # PyMuPDF core rendering & table finder
+pypdf>=4.0.0                    # Pure Python PDF reading fallback
+pdfplumber>=0.11.0              # Spatial coordinate vector table recovery
+rapidocr-onnxruntime>=1.2.0     # OCR fallback for raster diagrams & scanned covers
+docling>=2.0.0                  # Deep learning OCR & TableFormer cascade (optional high-res)
+
+# --- 5. Protocol & System Integration ---
+fastmcp>=3.0.0                  # Model Context Protocol server for Claude/Cursor
+pyyaml>=6.0.0                   # Ingestion manifest & source configuration parsing

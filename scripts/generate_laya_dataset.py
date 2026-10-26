@@ -1,16 +1,20 @@
 """
-generate_laya_dataset.py - Advanced Synthetic Dataset Generator with Ambiguous Borderline Distillation
+generate_laya_dataset.py - Synthetic Dataset Generator with Ambiguous Borderline Distillation
 
 Features:
 - Standard clear-cut domain samples across AST, Graphify, and Vault.
-- Borderline / multi-intent mixed developer queries with soft teacher distributions (e.g. 50/50 splits).
+- Borderline / multi-intent mixed developer queries with soft teacher distributions.
 - Diverse blast radius and memory distillation instances.
+- Anchored to REPO_ROOT / "data" so execution works from any working directory.
 """
 
-import os
 import json
+import os
 import random
-from typing import List, Dict, Any
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 AST_PATTERNS = [
     "Find all callers of {func}",
@@ -48,6 +52,14 @@ AST_PATTERNS = [
     "find broken references after renaming {func}",
     "extract caller graph for {func} using tree-sitter",
     "where does {module} get imported in scripts?",
+    "What is the mathematical update formula for {class_name} in source code?",
+    "Where is the state update equation for {func} implemented?",
+    "Show the algorithm update formula in {file}",
+    "Inspect the mathematical formula and code implementation of {func}",
+    "Find the update step equation for {class_name} in the codebase",
+    "What is the formula for {func} update in the code?",
+    "What is the formula for FAST-LIO2 ikd-Tree update in source code?",
+    "Show the covariance update formula in {class_name}",
 ]
 
 GRAPHIFY_PATTERNS = [
@@ -95,29 +107,41 @@ VAULT_PATTERNS = [
     "Find our documentation on {decision_topic} in 00-Meta",
     "What corrections did the user provide during last session?",
     "Look up the specification for {decision_topic}",
-    "Check 04-Agent-Memory for rules on {preference_topic}",
+    "Check 03-Agent-Memory for rules on {preference_topic}",
     "What were the conclusions from the design review note?",
     "Search my Obsidian vault for references to {decision_topic}",
     "What did we agree on in ADR-002 regarding {decision_topic}?",
     "Retrieve past consultation notes about {decision_topic}",
     "What are the system rules documented in 00-Meta/System-Rules.md?",
     "Search notes tagged with #adr or #architecture",
-    "Summarize the user constraints recorded in 04-Agent-Memory",
+    "Summarize the user constraints recorded in 03-Agent-Memory",
     "Did we decide to use {decision_topic} or an alternative?",
     "Find notes linking to [[{note_link}]] in the vault",
     "What was the reasoning behind our {decision_topic} choice?",
     "What user feedback was logged in the last session?",
     "Search the vault for markdown notes explaining {decision_topic}",
     "Check meeting transcripts for mentions of {preference_topic}",
+    "What are the specific requirements in ISO 15288 clause 6.4?",
+    "Find the exact verification table in ISO 29148",
+    "Show the stakeholder needs clause in ISO 15288",
+    "What is the definition of architecture viewpoint in ISO 42010?",
+    "Retrieve the verbatim text of SEBoK Section 3 from 02-Sources",
+    "Search vault sources for table of ergonomics processes in ISO 9241-220",
+    "Look up the system life cycle definition in [[iso-15288-2023-Overview]]",
+    "Find the exact reliability allocation formula in ANSI G-043B",
+    "Retrieve the overview note for [[incose-systems-engineering-handbook-5th-edition-Overview]]",
+    "Look up our task memory in 03-Agent-Memory/01-Tasks",
+    "What facts did we record in 03-Agent-Memory/03-Facts?",
+    "Search the vault for the exact definition of mission assurance",
+    "Find notes in 02-Sources describing architecture evaluation criteria in ISO 42030",
+    "What does ISO 25030 specify for software quality requirements verification?",
 ]
 
-# Ambiguous multi-intent queries: Teaching the model soft distributions
-# [CRG_AST, GRAPHIFY, VAULT]
 AMBIGUOUS_CHOICE_SAMPLES = [
     ("Explain the architecture of the AST parser and show who calls it", [0.46, 0.46, 0.08]),
     ("Search ADR-001 and trace callers of LayaDecisionEngine", [0.46, 0.08, 0.46]),
     ("How do the Obsidian vault notes connect to the system architecture graph?", [0.08, 0.46, 0.46]),
-    ("Show me the modules in 02-Codebase and their AST parse trees", [0.48, 0.10, 0.42]),
+    ("Show me the source modules and their AST parse trees", [0.48, 0.10, 0.42]),
     ("Check the blast radius of changing our architecture decisions", [0.46, 0.46, 0.08]),
     ("Review the high level design of hybrid search and its callers", [0.46, 0.46, 0.08]),
     ("What does ADR-003 say about callers of SQLite database?", [0.46, 0.08, 0.46]),
@@ -133,46 +157,163 @@ AMBIGUOUS_CHOICE_SAMPLES = [
 
 ENTITIES = {
     "func": [
-        "hybrid_search", "route_query", "score_blast_radius", "distill_turn", 
-        "ingest_file", "lint_vault", "sync_brain", "execute_tool", "parse_ast",
-        "calculate_rrf_score", "extract_wikilinks", "load_laya_agent", "score_ingestion_novelty",
-        "evaluate_conversational_turn", "build_sequence", "collate_items", "fit_temperature"
+        "hybrid_search",
+        "route_query",
+        "score_blast_radius",
+        "distill_turn",
+        "ingest_file",
+        "lint_vault",
+        "sync_brain",
+        "execute_tool",
+        "parse_ast",
+        "calculate_rrf_score",
+        "extract_wikilinks",
+        "load_laya_agent",
+        "score_ingestion_novelty",
+        "evaluate_conversational_turn",
+        "build_sequence",
+        "collate_items",
+        "fit_temperature",
+        "laserMapping",
+        "CreateMapBuilder",
+        "compute_odom",
+        "ekf_predict",
+        "ekf_update",
+        "publish_cmd_vel",
+        "solve_ik",
+        "track_trajectory",
+        "filter_scan",
+        "register_frame",
     ],
     "file": [
-        "scripts/laya_router.py", "scripts/hybrid_search.py", "scripts/mcp_server.py",
-        "scripts/memory_distiller.py", "scripts/vault_linter.py", "scripts/sync_brain.py",
-        "scripts/ingest_knowledge.py", "scripts/train_laya.py"
+        "scripts/laya_router.py",
+        "scripts/hybrid_search.py",
+        "scripts/mcp_server.py",
+        "scripts/memory_distiller.py",
+        "scripts/vault_linter.py",
+        "scripts/sync_brain.py",
+        "scripts/ingest_knowledge.py",
+        "scripts/train_laya.py",
+        "src/cartographer_ros/node.cpp",
+        "src/FAST_LIO/laserMapping.cpp",
+        "src/slam_toolbox/slam_toolbox.cpp",
+        "src/nav2_controller/controller_server.cpp",
+        "src/micro_ros/executor.c",
     ],
     "module": [
-        "tree_sitter", "fastembed", "sqlite3", "laya", "transformers", "pydantic", "torch", "safetensors"
+        "tree_sitter",
+        "fastembed",
+        "sqlite3",
+        "laya",
+        "transformers",
+        "pydantic",
+        "torch",
+        "safetensors",
+        "rclcpp",
+        "rclpy",
+        "nav2_core",
+        "ros2_control",
+        "micro_ros_msgs",
+        "geometry_msgs",
+        "sensor_msgs",
     ],
     "class_name": [
-        "LayaDecisionEngine", "HybridSearcher", "MemoryDistiller", "VaultLinter", "MCPKnowledgeServer",
-        "DecisionModel", "Agent", "LayaRouter"
+        "LayaDecisionEngine",
+        "HybridSearcher",
+        "MemoryDistiller",
+        "VaultLinter",
+        "MCPKnowledgeServer",
+        "DecisionModel",
+        "Agent",
+        "LayaRouter",
+        "LaserMapping",
+        "SlamToolbox",
+        "PurePursuitController",
+        "SystemInterface",
+        "BehaviorTreeEngine",
     ],
     "concept": [
-        "Dual-Process Cognitive Architecture", "System 1 Fast Reflex", "System 2 Deep Grounding",
-        "Multi-Engine Knowledge Stack", "Memory Distillation Lifecycle", "Semantic GraphRAG",
-        "Code-Review-Graph AST Pipeline", "Hybrid Search RRF Fusion", "Obsidian Vault Knowledge Base"
+        "Dual-Process Cognitive Architecture",
+        "System 1 Fast Reflex",
+        "System 2 Deep Grounding",
+        "Multi-Engine Knowledge Stack",
+        "Memory Distillation Lifecycle",
+        "Semantic GraphRAG",
+        "Code-Review-Graph AST Pipeline",
+        "Hybrid Search RRF Fusion",
+        "Obsidian Vault Knowledge Base",
+        "ROS 2 Jazzy and Humble Middleware Architecture",
+        "Nav2 Navigation Stack and Behavior Trees",
+        "FAST-LIO2 and LIO-SAM 3D LiDAR Odometry",
+        "Cartographer and SLAM Toolbox 2D Mapping",
+        "ros2_control HardwareInterface and Lifecycle",
+        "Gazebo Harmonic and ros_gz Bridge Architecture",
+        "Fossen 6-DOF Equations of Motion and Hydrodynamics",
+        "Acoustic Navigation USBL and DVL Integration",
+        "Micro-ROS Firmware on STM32 and ESP32",
+        "REP-103 Units and Coordinate Conventions",
+        "REP-105 Coordinate Frames earth map odom base_link",
+        "REP-147 Marine Vehicle Coordinate Conventions",
     ],
     "other_concept": [
-        "Obsidian Markdown Vault", "Laya ModernBERT Router", "Tree-sitter SQLite Graph",
-        "Agent Long-Term Memory", "Fastembed Vector Index", "Zero-Hallucination Grounding",
-        "Continuous Learning Loop", "Community Detection Clusters"
+        "Obsidian Markdown Vault",
+        "Laya ModernBERT Router",
+        "Tree-sitter SQLite Graph",
+        "Agent Long-Term Memory",
+        "Fastembed Vector Index",
+        "Zero-Hallucination Grounding",
+        "Continuous Learning Loop",
+        "Community Detection Clusters",
+        "Regulated Pure Pursuit Controller",
+        "SmacPlanner2D Hybrid-A* Path Planning",
+        "SocketCAN and CANopen Fieldbus Communication",
+        "FreeRTOS Micro-ROS Architecture",
+        "SensorDataQoS Reliability and Durability",
+        "URDF and SDFormat Physics",
     ],
     "decision_topic": [
-        "ModernBERT vs standard BERT", "fastembed vs sentence-transformers", "BM25 plus dense vector fusion",
-        "local-first architecture vs cloud APIs", "atomic notes and wikilinks convention", "SQLite schema for AST",
-        "temperature calibration bounds", "Draw.io vs Mermaid diagram rendering", "single commit repository policy"
+        "ModernBERT vs standard BERT",
+        "fastembed vs sentence-transformers",
+        "BM25 plus dense vector fusion",
+        "local-first architecture vs cloud APIs",
+        "atomic notes and wikilinks convention",
+        "SQLite schema for AST",
+        "temperature calibration bounds",
+        "single commit repository policy",
+        "Robbie YAGNI coding guardrail for single standard nodes",
+        "closed-form analytical kinematics vs nonlinear solvers",
+        "Regulated Pure Pursuit controller for outdoor path tracking",
+        "Gazebo Harmonic ros_gz bridge stamped vs unstamped cmd_vel",
+        "SingleThreadedExecutor vs MultiThreadedExecutor callback groups",
+        "WSL2 Ubuntu 24.04 network configuration",
     ],
     "preference_topic": [
-        "snake_case naming conventions", "never writing outside vault_template", "git commit history preservation",
-        "dark mode diagrams", "drawio vs mermaid format", "single forward pass routing", "type annotations on Python functions"
+        "snake_case naming conventions",
+        "never writing outside vault",
+        "git commit history preservation",
+        "single forward pass routing",
+        "type annotations on Python functions",
+        "Robbie minimal baseline under 150 LOC",
+        "empirical source citations with line numbers",
+        "ROS 2 REP standards compliance",
+        "local data sovereignty in vault/03-Agent-Memory",
     ],
     "note_link": [
-        "System-Architecture", "ADR-001-Laya-Router", "Fastembed-Retrieval-Spec", "Coding-Style-Guidelines",
-        "Dual-Process-Cognitive-Model", "Agent-Memory-Spec"
-    ]
+        "System-Architecture",
+        "ADR-001-Laya-Router",
+        "Fastembed-Retrieval-Spec",
+        "Coding-Style-Guidelines",
+        "Dual-Process-Cognitive-Model",
+        "Agent-Memory-Spec",
+        "Agent-Memory-MOC",
+        "2026-10-01_local_first_4_pillar_agent_memory",
+        "2026-10-03_gazebo_harmonic_and_ros_gz_simulation_architecture",
+        "rep-0103-Overview",
+        "rep-0105-Overview",
+        "rep-0117-Overview",
+        "rep-0119-Overview",
+        "rep-0138-Overview",
+    ],
 }
 
 SCORE_SAMPLES = [
@@ -181,26 +322,36 @@ SCORE_SAMPLES = [
     ("Fixing a typo in a log message inside vault_linter.py", 1),
     ("Adding blank lines for PEP8 compliance in scripts/sync_brain.py", 1),
     ("Updating repository description in package metadata", 1),
+    ("Fixing spelling in code comments of laya_router.py", 1),
+    ("Updating Markdown headings in SKILL.md", 1),
     ("Adding an optional helper parameter with a default value to route_query()", 2),
     ("Refactoring internal list comprehension into a generator inside ingest_file()", 2),
     ("Adding a new optional cache lookup step before calling the database", 2),
     ("Writing a unit test verifying hybrid search scoring logic", 2),
     ("Adding type hints to private helper functions in mcp_server.py", 2),
+    ("Adding a new debug logging line inside sync_brain.py", 2),
+    ("Adding an internal helper method _format_timestamp in memory_distiller.py", 2),
     ("Renaming the public method route_query to evaluate_query across laya_router.py", 3),
     ("Changing the return type of hybrid_search from List[str] to Dict[str, Any]", 3),
     ("Updating SQLite index creation to include an additional compound column", 3),
     ("Modifying default RRF k constant from 60 to 45 in hybrid search", 3),
     ("Refactoring memory distiller decay function from linear to exponential", 3),
+    ("Changing default parameter values for UniversalKnowledgeIngester constructor", 3),
+    ("Adding a required argument to the public search_vault API function", 3),
     ("Updating SQLite table schema for code-review-graph without running a migration", 4),
     ("Rewriting the tokenizer encoding pipeline in common.py used by all modules", 4),
     ("Changing the global database connection string and connection pooling protocol", 4),
     ("Switching embedding model weights from 384-dimensional to 768-dimensional", 4),
     ("Modifying the public MCP server protocol response schema", 4),
+    ("Refactoring the base AbstractEngine class inherited by all search engines", 4),
+    ("Replacing the underlying networkx graph representation with an incompatible C-binding", 4),
     ("Deleting scripts/hybrid_search.py and replacing it with an incompatible interface", 5),
     ("Dropping the primary tables in the active knowledge base SQLite database", 5),
     ("Modifying core AST parser grammar rules affecting all language bindings", 5),
     ("Hardcoding an invalid API token and removing environment variable fallback", 5),
-    ("Removing the entire 04-Agent-Memory directory and wiping persistent rules", 5)
+    ("Removing the entire 03-Agent-Memory directory and wiping persistent rules", 5),
+    ("Wiping all stored embeddings in vault_vectors.db without recovery backup", 5),
+    ("Deleting the root models directory and breaking all runtime routing inference", 5),
 ]
 
 NOUL_SAMPLES = [
@@ -225,11 +376,9 @@ NOUL_SAMPLES = [
     ("User: Why did the previous test fail?", False),
     ("User: Help me write a regex for email validation.", False),
     ("User: How does ModernBERT differ from classic RoBERTa?", False),
-    ("User: What is the current version of PyTorch installed?", False)
+    ("User: What is the current version of PyTorch installed?", False),
 ]
 
-# Ambiguous Noul cases: Mild suggestions or thoughts that are borderline
-# [P(false), P(true)]
 AMBIGUOUS_NOUL_SAMPLES = [
     ("User: I think maybe we could consider using black for formatting at some point.", [0.55, 0.45]),
     ("User: In some projects I usually like camelCase but let's see.", [0.58, 0.42]),
@@ -251,80 +400,114 @@ def fill_template(template: str) -> str:
     return res
 
 
-def generate_dataset(output_dir: str = "data", train_ratio: float = 0.85):
-    os.makedirs(output_dir, exist_ok=True)
-    all_samples = []
+def generate_dataset(output_dir: Optional[str] = None, train_ratio: float = 0.85):
+    target_dir = Path(output_dir) if output_dir else (REPO_ROOT / "data")
+    target_dir.mkdir(parents=True, exist_ok=True)
+    all_samples: List[Dict[str, Any]] = []
 
-    # 1. Clear-cut Routing Choice samples (~900 instances)
     for _ in range(10):
         for pattern in AST_PATTERNS:
-            all_samples.append({
-                "state": fill_template(pattern),
-                "question": "Which engine should handle this knowledge query?",
-                "type": "choice",
-                "options": ["CRG_AST_CALL_GRAPH", "GRAPHIFY_SEMANTIC_GRAPHRAG", "OBSIDIAN_VAULT_SEARCH"],
-                "target": "CRG_AST_CALL_GRAPH"
-            })
+            all_samples.append(
+                {
+                    "state": fill_template(pattern),
+                    "question": "Which engine should handle this knowledge query?",
+                    "type": "choice",
+                    "options": [
+                        "CRG_AST_CALL_GRAPH",
+                        "GRAPHIFY_SEMANTIC_GRAPHRAG",
+                        "OBSIDIAN_VAULT_SEARCH",
+                    ],
+                    "target": "CRG_AST_CALL_GRAPH",
+                }
+            )
         for pattern in GRAPHIFY_PATTERNS:
-            all_samples.append({
-                "state": fill_template(pattern),
-                "question": "Which engine should handle this knowledge query?",
-                "type": "choice",
-                "options": ["CRG_AST_CALL_GRAPH", "GRAPHIFY_SEMANTIC_GRAPHRAG", "OBSIDIAN_VAULT_SEARCH"],
-                "target": "GRAPHIFY_SEMANTIC_GRAPHRAG"
-            })
+            all_samples.append(
+                {
+                    "state": fill_template(pattern),
+                    "question": "Which engine should handle this knowledge query?",
+                    "type": "choice",
+                    "options": [
+                        "CRG_AST_CALL_GRAPH",
+                        "GRAPHIFY_SEMANTIC_GRAPHRAG",
+                        "OBSIDIAN_VAULT_SEARCH",
+                    ],
+                    "target": "GRAPHIFY_SEMANTIC_GRAPHRAG",
+                }
+            )
         for pattern in VAULT_PATTERNS:
-            all_samples.append({
-                "state": fill_template(pattern),
-                "question": "Which engine should handle this knowledge query?",
-                "type": "choice",
-                "options": ["CRG_AST_CALL_GRAPH", "GRAPHIFY_SEMANTIC_GRAPHRAG", "OBSIDIAN_VAULT_SEARCH"],
-                "target": "OBSIDIAN_VAULT_SEARCH"
-            })
+            all_samples.append(
+                {
+                    "state": fill_template(pattern),
+                    "question": "Which engine should handle this knowledge query?",
+                    "type": "choice",
+                    "options": [
+                        "CRG_AST_CALL_GRAPH",
+                        "GRAPHIFY_SEMANTIC_GRAPHRAG",
+                        "OBSIDIAN_VAULT_SEARCH",
+                    ],
+                    "target": "OBSIDIAN_VAULT_SEARCH",
+                }
+            )
 
-    # 2. Ambiguous multi-intent Choice samples with soft distribution targets (~150 instances)
     for _ in range(10):
         for text, soft_dist in AMBIGUOUS_CHOICE_SAMPLES:
-            all_samples.append({
-                "state": text,
-                "question": "Which engine should handle this knowledge query?",
-                "type": "choice",
-                "options": ["CRG_AST_CALL_GRAPH", "GRAPHIFY_SEMANTIC_GRAPHRAG", "OBSIDIAN_VAULT_SEARCH"],
-                "target_dist": soft_dist,
-                "target": "CRG_AST_CALL_GRAPH" if soft_dist[0] == max(soft_dist) else ("GRAPHIFY_SEMANTIC_GRAPHRAG" if soft_dist[1] == max(soft_dist) else "OBSIDIAN_VAULT_SEARCH")
-            })
+            all_samples.append(
+                {
+                    "state": text,
+                    "question": "Which engine should handle this knowledge query?",
+                    "type": "choice",
+                    "options": [
+                        "CRG_AST_CALL_GRAPH",
+                        "GRAPHIFY_SEMANTIC_GRAPHRAG",
+                        "OBSIDIAN_VAULT_SEARCH",
+                    ],
+                    "target_dist": soft_dist,
+                    "target": (
+                        "CRG_AST_CALL_GRAPH"
+                        if soft_dist[0] == max(soft_dist)
+                        else (
+                            "GRAPHIFY_SEMANTIC_GRAPHRAG"
+                            if soft_dist[1] == max(soft_dist)
+                            else "OBSIDIAN_VAULT_SEARCH"
+                        )
+                    ),
+                }
+            )
 
-    # 3. Score samples (Blast Radius, ~250 instances)
     for _ in range(10):
         for text, score in SCORE_SAMPLES:
-            all_samples.append({
-                "state": text,
-                "question": "Rate the structural blast radius risk of this proposed modification",
-                "type": "score",
-                "range": [1, 5],
-                "target": score
-            })
+            all_samples.append(
+                {
+                    "state": text,
+                    "question": "Rate the structural blast radius risk of this proposed modification",
+                    "type": "score",
+                    "range": [1, 5],
+                    "target": score,
+                }
+            )
 
-    # 4. Noul samples (Memory Distillation, ~220 instances)
     for _ in range(10):
         for text, noul_val in NOUL_SAMPLES:
-            all_samples.append({
-                "state": text,
-                "question": "Does this turn contain an enduring user preference or rule to remember?",
-                "type": "noul",
-                "target": noul_val
-            })
+            all_samples.append(
+                {
+                    "state": text,
+                    "question": "Does this turn contain an enduring user preference or rule to remember?",
+                    "type": "noul",
+                    "target": noul_val,
+                }
+            )
 
-    # 5. Ambiguous Noul samples (~80 instances)
     for _ in range(10):
         for text, soft_dist in AMBIGUOUS_NOUL_SAMPLES:
-            all_samples.append({
-                "state": text,
-                "question": "Does this turn contain an enduring user preference or rule to remember?",
-                "type": "noul",
-                "target_dist": soft_dist,
-                "target": soft_dist[1] >= 0.5
-            })
+            all_samples.append(
+                {
+                    "state": text,
+                    "question": "Does this turn contain an enduring user preference or rule to remember?",
+                    "type": "noul",
+                    "target_dist": soft_dist,
+                    "target": soft_dist[1] >= 0.5,
+                }
+            )
 
     random.seed(42)
     random.shuffle(all_samples)
@@ -333,8 +516,8 @@ def generate_dataset(output_dir: str = "data", train_ratio: float = 0.85):
     train_samples = all_samples[:split_idx]
     val_samples = all_samples[split_idx:]
 
-    train_path = os.path.join(output_dir, "train_data.jsonl")
-    val_path = os.path.join(output_dir, "val_data.jsonl")
+    train_path = target_dir / "train_data.jsonl"
+    val_path = target_dir / "val_data.jsonl"
 
     with open(train_path, "w", encoding="utf-8") as f:
         for s in train_samples:
@@ -346,6 +529,7 @@ def generate_dataset(output_dir: str = "data", train_ratio: float = 0.85):
 
     print(f"[Dataset Generator] Generated {len(train_samples)} train samples -> {train_path}")
     print(f"[Dataset Generator] Generated {len(val_samples)} val samples -> {val_path}")
+    return str(train_path), str(val_path)
 
 
 if __name__ == "__main__":

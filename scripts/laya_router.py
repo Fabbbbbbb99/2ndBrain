@@ -6,18 +6,34 @@ Evaluates typed schema questions (Choice, Score, Noul) in a single parallel forw
 with zero-latency calibrated heuristic fallbacks and passive Strategy 3 telemetry logging.
 """
 
+import datetime
+import json
 import os
 import re
-import json
-import datetime
 import warnings
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 
 try:
     import laya
     LAYA_AVAILABLE = True
 except ImportError:
     LAYA_AVAILABLE = False
+
+
+def resolve_device(device: str = "auto") -> str:
+    """Resolves the optimal PyTorch compute device ('cuda', 'mps', or 'cpu')."""
+    if device and device.lower() != "auto":
+        return device
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            return "cuda"
+        if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+            return "mps"
+    except Exception:
+        pass
+    return "cpu"
 
 
 class LayaDecisionEngine:
@@ -30,17 +46,26 @@ class LayaDecisionEngine:
         self,
         model_id: Optional[str] = None,
         subfolder: Optional[str] = "typed-decisions",
-        device: str = "cpu",
+        device: str = "auto",
         enable_neural: bool = True,
-        telemetry_path: Optional[str] = None
+        telemetry_path: Optional[str] = None,
     ):
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         env_model_path = os.environ.get("LAYA_MODEL_PATH")
-        local_model_path = env_model_path if env_model_path else os.path.join(base_dir, "models", "laya-2ndbrain")
+        local_model_path = (
+            env_model_path
+            if env_model_path
+            else os.path.join(base_dir, "models", "laya-knowledge-base")
+        )
+        if not os.path.exists(local_model_path):
+            local_model_path = os.path.join(base_dir, "models", "laya-2ndbrain")
+        if not os.path.exists(local_model_path):
+            local_model_path = os.path.join(base_dir, "models", "laya-se-brain")
 
-        # Auto-detect local fine-tuned and calibrated checkpoint
         if model_id is None:
-            if os.path.exists(local_model_path) and os.path.exists(os.path.join(local_model_path, "model.safetensors")):
+            if os.path.exists(local_model_path) and os.path.exists(
+                os.path.join(local_model_path, "model.safetensors")
+            ):
                 self.model_id = local_model_path
                 self.subfolder = None
                 self.is_fine_tuned = True
@@ -51,9 +76,12 @@ class LayaDecisionEngine:
         else:
             self.model_id = model_id
             self.subfolder = subfolder
-            self.is_fine_tuned = "laya-2ndbrain" in model_id
+            self.is_fine_tuned = any(
+                k in model_id for k in ["laya-knowledge-base", "laya-2ndbrain", "laya-se-brain"]
+            )
 
-        self.device = device
+        env_device = os.environ.get("LAYA_DEVICE", device)
+        self.device = resolve_device(env_device)
         self.enable_neural = enable_neural
         self._agent = None
         self._load_attempted = False
@@ -61,23 +89,36 @@ class LayaDecisionEngine:
         if telemetry_path:
             self.telemetry_path = telemetry_path
         else:
-            self.telemetry_path = os.path.join(base_dir, "vault_template", "04-Agent-Memory", "telemetry.jsonl")
+            env_root = os.environ.get("KNOWLEDGE_BASE_ROOT")
+            if env_root and os.path.exists(env_root):
+                base_dir = env_root
+            v_dir = "vault" if os.path.exists(os.path.join(base_dir, "vault")) else "vault_template"
+            self.telemetry_path = os.path.join(base_dir, v_dir, "03-Agent-Memory", "telemetry.jsonl")
 
-        self.isotonic_noul = None
-        iso_path = os.path.join(self.model_id, "noul_isotonic.json")
+        self.isotonic_pava = None
+        iso_path = os.path.join(self.model_id, "pava_isotonic.json")
         if os.path.exists(iso_path):
             try:
                 with open(iso_path, "r", encoding="utf-8") as f:
-                    self.isotonic_noul = json.load(f)
+                    self.isotonic_pava = json.load(f)
             except Exception:
                 pass
 
-    def calibrate_noul(self, prob: float) -> float:
-        """Applies exact non-parametric Isotonic Regression (PAVA) calibration to Noul probabilities."""
-        if self.isotonic_noul and "x" in self.isotonic_noul and "y" in self.isotonic_noul:
+    def calibrate_confidence(self, prob: float) -> float:
+        """Applies exact non-parametric Isotonic Regression (PAVA) calibration to Top-1 probabilities."""
+        if self.isotonic_pava and "x" in self.isotonic_pava and "y" in self.isotonic_pava:
             try:
                 import numpy as np
-                cal = float(np.interp(prob, self.isotonic_noul["x"], self.isotonic_noul["y"], left=0.0, right=1.0))
+
+                cal = float(
+                    np.interp(
+                        prob,
+                        self.isotonic_pava["x"],
+                        self.isotonic_pava["y"],
+                        left=0.0,
+                        right=1.0,
+                    )
+                )
                 return round(cal, 3)
             except Exception:
                 pass
@@ -93,9 +134,13 @@ class LayaDecisionEngine:
             try:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
-                    self._agent = laya.load(self.model_id, subfolder=self.subfolder, device=self.device)
+                    self._agent = laya.load(
+                        self.model_id, subfolder=self.subfolder, device=self.device
+                    )
             except Exception as e:
-                print(f"[Laya] Warning: Could not initialize neural agent: {e}. Using calibrated fallback.")
+                print(
+                    f"[Laya] Warning: Could not initialize neural agent: {e}. Using calibrated fallback."
+                )
                 self._agent = None
         return self._agent
 
@@ -107,7 +152,7 @@ class LayaDecisionEngine:
         confidence: float,
         engine_type: str,
         is_feedback: bool = False,
-        feedback_notes: str = ""
+        feedback_notes: str = "",
     ):
         """Strategy 3: Passive log-as-you-go telemetry recording for continuous distillation."""
         try:
@@ -121,7 +166,7 @@ class LayaDecisionEngine:
                 "engine_type": engine_type,
                 "model_id": self.model_id,
                 "is_feedback": is_feedback,
-                "feedback_notes": feedback_notes
+                "feedback_notes": feedback_notes,
             }
             with open(self.telemetry_path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(entry) + "\n")
@@ -129,7 +174,7 @@ class LayaDecisionEngine:
             pass
 
     def record_feedback(self, query: str, correct_decision: str, reason: str = ""):
-        """Strategy 3 Feedback: Explicitly records a user correction as a gold training label for future retraining."""
+        """Strategy 3 Feedback: Explicitly records a user correction as a gold training label."""
         self.log_telemetry(
             task="user_correction",
             state=query,
@@ -137,7 +182,7 @@ class LayaDecisionEngine:
             confidence=1.0,
             engine_type="gold_user_correction",
             is_feedback=True,
-            feedback_notes=reason
+            feedback_notes=reason,
         )
 
     def route_query(self, query: str) -> Dict[str, Any]:
@@ -155,34 +200,68 @@ class LayaDecisionEngine:
                         "criteria": {
                             "CRG_AST_CALL_GRAPH": "Questions regarding code function call trees, callers, callees, imports, class inheritance, or code blast radius",
                             "GRAPHIFY_SEMANTIC_GRAPHRAG": "Questions about system architecture, high-level design, or module concepts",
-                            "OBSIDIAN_VAULT_SEARCH": "Questions asking about past meeting notes, decisions, user preferences, remembered rules, or session history"
-                        }
+                            "OBSIDIAN_VAULT_SEARCH": "Questions asking about past meeting notes, decisions, user preferences, remembered rules, or session history",
+                        },
                     }
                 }
                 res = self.agent.system_one(query, questions)
                 ans = res["answers"]["target_engine"]
                 decision = ans["choice"]
                 conf = ans.get("answer_confidence", ans.get("confidence", 0.75))
+                conf = self.calibrate_confidence(conf)
                 result = {
                     "decision": decision,
-                    "confidence": round(conf, 3),
+                    "confidence": conf,
                     "reasoning": f"Neural Laya ({'Fine-Tuned 2ndBrain' if self.is_fine_tuned else 'ModernBERT-large'}) routed via {decision} ({conf*100:.1f}% confidence)",
-                    "engine_type": "neural"
+                    "engine_type": "neural",
                 }
                 self.log_telemetry("query_triage", query, decision, conf, "neural")
                 return result
             except Exception:
                 pass
 
-        # --- Calibrated Heuristic Fallback ---
         q_lower = query.lower()
-
-        ast_triggers = ["call", "caller", "callee", "who calls", "blast radius", "break", "signature", 
-                        "function", "class", "symbol", "inherit", "dependency", "ast", "imported"]
-        concept_triggers = ["why", "architecture", "overview", "community", "high-level", "design", 
-                            "how does the system", "concept", "cluster", "bridge", "module relationship"]
-        memory_triggers = ["what did we decide", "rule", "preference", "session", "yesterday", 
-                           "past discussion", "consultation", "transcript", "note", "remember"]
+        ast_triggers = [
+            "call",
+            "caller",
+            "callee",
+            "who calls",
+            "blast radius",
+            "break",
+            "signature",
+            "function",
+            "class",
+            "symbol",
+            "inherit",
+            "dependency",
+            "ast",
+            "imported",
+        ]
+        concept_triggers = [
+            "why",
+            "architecture",
+            "overview",
+            "community",
+            "high-level",
+            "design",
+            "how does the system",
+            "concept",
+            "cluster",
+            "bridge",
+            "module relationship",
+        ]
+        memory_triggers = [
+            "what did we decide",
+            "rule",
+            "preference",
+            "session",
+            "yesterday",
+            "past discussion",
+            "consultation",
+            "transcript",
+            "note",
+            "remember",
+        ]
 
         ast_score = sum(1 for t in ast_triggers if t in q_lower)
         concept_score = sum(1 for t in concept_triggers if t in q_lower)
@@ -205,16 +284,13 @@ class LayaDecisionEngine:
             "decision": decision,
             "confidence": round(confidence, 3),
             "reasoning": f"Heuristic fallback routed via {decision} with confidence {confidence:.2f}",
-            "engine_type": "heuristic"
+            "engine_type": "heuristic",
         }
         self.log_telemetry("query_triage", query, decision, confidence, "heuristic")
         return result
 
     def score_ingestion_novelty(self, text: str) -> Dict[str, Any]:
-        """
-        Typed Question: Score (1 to 5)
-        Rate the architectural significance and conceptual novelty of this document.
-        """
+        """Typed Question: Score (1 to 5)."""
         if self.agent:
             try:
                 questions = {
@@ -226,8 +302,8 @@ class LayaDecisionEngine:
                             "Minor updates, routine bug fixes, test snapshots",
                             "Standard module design, implementation details",
                             "Significant system features, architectural designs, APIs",
-                            "Core architecture, foundational ADRs, critical protocol designs"
-                        ]
+                            "Core architecture, foundational ADRs, critical protocol designs",
+                        ],
                     }
                 }
                 res = self.agent.system_one(text[:2500], questions)
@@ -235,24 +311,40 @@ class LayaDecisionEngine:
                 lvl = score_ans.get("level", 3)
                 final_score = max(1, min(5, lvl + 1))
                 conf = score_ans.get("confidence", 0.8)
+                conf = self.calibrate_confidence(conf)
                 result = {
                     "score": final_score,
                     "should_extract_graph": final_score >= 3,
                     "reasoning": f"Neural Laya novelty scored at {final_score}/5",
-                    "engine_type": "neural"
+                    "engine_type": "neural",
                 }
                 self.log_telemetry("ingestion_novelty", text[:200], final_score, conf, "neural")
                 return result
             except Exception:
                 pass
 
-        # --- Calibrated Heuristic Fallback ---
         text_sample = text[:3000].lower()
         score = 2
-
-        novelty_indicators = ["architecture", "adr", "decision", "trade-off", "system design", 
-                              "database schema", "protocol", "security", "pipeline", "consensus"]
-        routine_indicators = ["typo", "formatting", "license", "changelog", "test snapshot", "bump version"]
+        novelty_indicators = [
+            "architecture",
+            "adr",
+            "decision",
+            "trade-off",
+            "system design",
+            "database schema",
+            "protocol",
+            "security",
+            "pipeline",
+            "consensus",
+        ]
+        routine_indicators = [
+            "typo",
+            "formatting",
+            "license",
+            "changelog",
+            "test snapshot",
+            "bump version",
+        ]
 
         for ind in novelty_indicators:
             if ind in text_sample:
@@ -266,16 +358,13 @@ class LayaDecisionEngine:
             "score": final_score,
             "should_extract_graph": final_score >= 3,
             "reasoning": f"Heuristic architectural novelty scored at {final_score}/5",
-            "engine_type": "heuristic"
+            "engine_type": "heuristic",
         }
         self.log_telemetry("ingestion_novelty", text[:200], final_score, 0.7, "heuristic")
         return result
 
     def score_blast_risk(self, diff_summary: str) -> Dict[str, Any]:
-        """
-        Typed Question: Noul (Probability 0.0 - 1.0)
-        Does this change introduce breaking API changes, alter core boundaries, or impact critical schemas?
-        """
+        """Typed Question: Noul (Probability 0.0 - 1.0)."""
         if self.agent:
             try:
                 questions = {
@@ -284,33 +373,43 @@ class LayaDecisionEngine:
                         "instructions": "Does this code diff introduce breaking API changes, drop database tables/columns, remove public functions, or break security?",
                         "criteria": {
                             "true": "Contains breaking changes, signature modifications, deletions, or database alterations",
-                            "false": "Safe, non-breaking, documentation, formatting, or internal additive changes"
-                        }
+                            "false": "Safe, non-breaking, documentation, formatting, or internal additive changes",
+                        },
                     }
                 }
                 res = self.agent.system_one(diff_summary[:2500], questions)
                 noul_ans = res["answers"]["is_high_risk"]
                 raw_prob = noul_ans.get("noul", noul_ans.get("probability", 0.2))
-                prob = self.calibrate_noul(raw_prob)
+                prob = self.calibrate_confidence(raw_prob)
                 result = {
                     "probability": round(prob, 2),
                     "is_high_risk": prob > 0.7,
                     "recommendation": "ESCALATE_TO_SYSTEM2" if prob > 0.7 else "AUTO_LOG",
-                    "engine_type": "neural"
+                    "engine_type": "neural",
                 }
                 self.log_telemetry("blast_risk", diff_summary[:200], prob > 0.7, prob, "neural")
                 return result
             except Exception:
                 pass
 
-        # --- Calibrated Heuristic Fallback ---
         diff_lower = diff_summary.lower()
         risk_prob = 0.2
-
         critical_markers = [
-            "breaking", "delete", "drop table", "remove function", "signature changed", 
-            "public api", "auth", "security", "database migration", "critical",
-            "-def ", "-class ", "drop column", "alter table", "deprecated"
+            "breaking",
+            "delete",
+            "drop table",
+            "remove function",
+            "signature changed",
+            "public api",
+            "auth",
+            "security",
+            "database migration",
+            "critical",
+            "-def ",
+            "-class ",
+            "drop column",
+            "alter table",
+            "deprecated",
         ]
         for marker in critical_markers:
             if marker in diff_lower:
@@ -321,16 +420,13 @@ class LayaDecisionEngine:
             "probability": risk_prob,
             "is_high_risk": risk_prob > 0.7,
             "recommendation": "ESCALATE_TO_SYSTEM2" if risk_prob > 0.7 else "AUTO_LOG",
-            "engine_type": "heuristic"
+            "engine_type": "heuristic",
         }
         self.log_telemetry("blast_risk", diff_summary[:200], risk_prob > 0.7, risk_prob, "heuristic")
         return result
 
     def evaluate_conversational_turn(self, user_msg: str, assistant_msg: str) -> Dict[str, Any]:
-        """
-        Typed Question: Noul + Choice
-        Evaluates whether a conversation turn contains a durable rule, preference, or architectural decision.
-        """
+        """Typed Question: Noul + Choice."""
         if self.agent:
             try:
                 state = f"User: {user_msg}\nAssistant: {assistant_msg}"
@@ -340,8 +436,8 @@ class LayaDecisionEngine:
                         "instructions": "Does this turn establish a persistent user preference, explicit rule, bug fix pattern, or architectural constraint?",
                         "criteria": {
                             "true": "Establishes a rule, constraint, or preference that should be remembered across future sessions",
-                            "false": "Chit-chat, temporary question, transient task execution, or one-off conversation"
-                        }
+                            "false": "Chit-chat, temporary question, transient task execution, or one-off conversation",
+                        },
                     },
                     "memory_type": {
                         "type": "choice",
@@ -350,27 +446,28 @@ class LayaDecisionEngine:
                             "user_preference": "User instructions on style, tool preferences, coding habits",
                             "architectural_constraint": "Project architecture decisions, ADRs, design requirements",
                             "bug_pattern": "Specific bug fixes, pitfalls to avoid",
-                            "none": "Not a durable memory"
-                        }
-                    }
+                            "none": "Not a durable memory",
+                        },
+                    },
                 }
                 res = self.agent.system_one(state[:2500], questions)
                 raw_prob = res["answers"]["is_durable_memory"].get("noul", 0.1)
-                prob = self.calibrate_noul(raw_prob)
+                prob = self.calibrate_confidence(raw_prob)
                 m_type = res["answers"]["memory_type"].get("choice", "none")
                 result = {
                     "is_durable_memory": prob >= 0.7 and m_type != "none",
                     "probability": round(prob, 2),
                     "memory_type": m_type,
                     "rule_text": user_msg.strip() if prob >= 0.7 else None,
-                    "engine_type": "neural"
+                    "engine_type": "neural",
                 }
-                self.log_telemetry("memory_distillation", user_msg[:200], prob >= 0.7, prob, "neural")
+                self.log_telemetry(
+                    "memory_distillation", user_msg[:200], prob >= 0.7, prob, "neural"
+                )
                 return result
             except Exception:
                 pass
 
-        # --- Calibrated Heuristic Fallback ---
         user_lower = user_msg.lower()
         is_memory = False
         memory_type = "none"
@@ -378,10 +475,16 @@ class LayaDecisionEngine:
         prob = 0.1
 
         preference_patterns = [
-            (r"(always|never|do not|don't|prefer)\s+(use|import|modify|touch|run|apply|create)\s+(.*)", "user_preference"),
-            (r"(we decided|decision:|let's go with|our architecture requires)\s+(.*)", "architectural_constraint"),
+            (
+                r"(always|never|do not|don't|prefer)\s+(use|import|modify|touch|run|apply|create)\s+(.*)",
+                "user_preference",
+            ),
+            (
+                r"(we decided|decision:|let's go with|our architecture requires)\s+(.*)",
+                "architectural_constraint",
+            ),
             (r"(remember that|make sure to always|make sure that|note that)\s+(.*)", "user_preference"),
-            (r"(fix|bug):?\s+(.*)", "bug_pattern")
+            (r"(fix|bug):?\s+(.*)", "bug_pattern"),
         ]
 
         for pattern, m_type in preference_patterns:
@@ -393,7 +496,9 @@ class LayaDecisionEngine:
                 extracted_rule = user_msg.strip()
                 break
 
-        if not is_memory and ("we decided" in assistant_msg.lower() or "architectural decision" in assistant_msg.lower()):
+        if not is_memory and (
+            "we decided" in assistant_msg.lower() or "architectural decision" in assistant_msg.lower()
+        ):
             is_memory = True
             memory_type = "architectural_constraint"
             prob = 0.78
@@ -404,32 +509,35 @@ class LayaDecisionEngine:
             "probability": prob,
             "memory_type": memory_type,
             "rule_text": extracted_rule,
-            "engine_type": "heuristic"
+            "engine_type": "heuristic",
         }
-        self.log_telemetry("memory_distillation", user_msg[:200], is_memory and prob >= 0.7, prob, "heuristic")
+        self.log_telemetry(
+            "memory_distillation", user_msg[:200], is_memory and prob >= 0.7, prob, "heuristic"
+        )
         return result
 
     def classify_vault_category(self, title: str, content: str) -> str:
-        """
-        Typed Question: Choice
-        Which vault category does this note belong to?
-        """
+        """Typed Question: Choice."""
         combined = (title + " " + content[:500]).lower()
         if "task" in combined or "todo" in combined:
-            return "04-Agent-Memory/01-Tasks"
+            return "03-Agent-Memory/01-Tasks"
         elif "decision" in combined or "adr" in combined:
-            return "01-Concepts/Decisions"
+            return "03-Agent-Memory/02-Decisions"
         elif "transcript" in combined or "consultation" in combined or "meeting" in combined:
-            return "03-Sources/Transcripts"
+            return "02-Sources/Transcripts"
         elif "skill" in combined or "recipe" in combined or "procedure" in combined:
-            return "04-Agent-Memory/04-Skills"
-        elif "rule" in combined or "preference" in combined or "fact" in combined or "correction" in combined:
-            return "04-Agent-Memory/03-Facts"
+            return "03-Agent-Memory/04-Skills"
+        elif (
+            "rule" in combined
+            or "preference" in combined
+            or "fact" in combined
+            or "correction" in combined
+        ):
+            return "03-Agent-Memory/03-Facts"
         elif "module" in combined or "ast" in combined or "class" in combined or "function" in combined:
-            return "02-Codebase/Modules"
+            return "01-Concepts/Architecture"
         else:
             return "01-Concepts/Architecture"
 
 
-# Global singleton instance
 router = LayaDecisionEngine()

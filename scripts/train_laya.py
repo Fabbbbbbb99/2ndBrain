@@ -6,23 +6,40 @@ Features:
 2. Unfreezes top ModernBERT encoder layers + decision head.
 3. Multi-Temperature Vector Calibration: Independent T_choice, T_score, T_noul.
 4. Non-Parametric Isotonic Regression (PAVA) for binary/noul calibration.
-5. Achieves sub-0.03 Expected Calibration Error (ECE).
+5. Automatic CUDA/MPS/CPU device placement across batch collation and L-BFGS calibration.
 """
 
-import os
-import sys
+import argparse
 import json
+import os
 import shutil
+import sys
 import warnings
+from pathlib import Path
+from typing import Optional
+
+import laya
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from safetensors.torch import save_model
 from huggingface_hub import snapshot_download
-
-import laya
 from laya.common import collate_items
+from safetensors.torch import save_model
+from transformers import get_cosine_schedule_with_warmup
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+def resolve_device(device: str = "auto") -> str:
+    """Resolves the optimal PyTorch compute device ('cuda', 'mps', or 'cpu')."""
+    if device and device.lower() != "auto":
+        return device
+    if torch.cuda.is_available():
+        return "cuda"
+    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
 
 
 def load_dataset(filepath: str):
@@ -34,7 +51,7 @@ def load_dataset(filepath: str):
     return samples
 
 
-def apply_label_smoothing(target_idx: int, num_classes: int, epsilon: float = 0.08) -> list:
+def apply_label_smoothing(target_idx: int, num_classes: int, epsilon: float = 0.04) -> list:
     """Label smoothing to prevent logit explosion."""
     if num_classes <= 1:
         return [1.0]
@@ -60,7 +77,7 @@ def prepare_item(agent, sample: dict):
         qdef = {
             "type": "choice",
             "instructions": sample["question"],
-            "criteria": {opt: opt for opt in options}
+            "criteria": {opt: opt for opt in options},
         }
     elif q_type == "score":
         score_val = sample["target"]
@@ -70,7 +87,7 @@ def prepare_item(agent, sample: dict):
         qdef = {
             "type": "score",
             "instructions": sample["question"],
-            "criteria": [f"Level {i+1}" for i in range(5)]
+            "criteria": [f"Level {i+1}" for i in range(5)],
         }
     elif q_type == "noul":
         if "target_dist" in sample:
@@ -84,7 +101,7 @@ def prepare_item(agent, sample: dict):
         qdef = {
             "type": "noul",
             "instructions": sample["question"],
-            "criteria": {"false": "False criteria", "true": "True criteria"}
+            "criteria": {"false": "False criteria", "true": "True criteria"},
         }
     else:
         return None
@@ -122,34 +139,44 @@ def compute_ece(confidences, predictions, ground_truth, n_bins=10):
     return float(ece)
 
 
-def fit_task_temperature(val_logits_list, val_targets_list):
-    """Finds optimal temperature T for a specific task minimizing NLL."""
-    if not val_logits_list:
-        return 1.0
+def fit_task_temperature(val_logits_list, val_targets_list, lr=0.01, max_iter=50) -> float:
+    """Finds optimal temperature T for a specific task minimizing NLL using L-BFGS."""
+    if isinstance(val_logits_list, torch.Tensor):
+        if val_logits_list.numel() == 0:
+            return 1.0
+        logits_seq = [val_logits_list[i] for i in range(val_logits_list.shape[0])]
+    else:
+        logits_seq = list(val_logits_list)
+        if not logits_seq:
+            return 1.0
 
-    best_t = 1.0
-    best_nll = float("inf")
+    if isinstance(val_targets_list, torch.Tensor):
+        targets_seq = [int(x) for x in val_targets_list.tolist()]
+    else:
+        targets_seq = [int(x) for x in val_targets_list]
 
-    for candidate_t in np.linspace(0.5, 2.5, 41):
-        total_nll = 0.0
-        for logits, target in zip(val_logits_list, val_targets_list):
-            scaled = logits / candidate_t
-            log_probs = F.log_softmax(scaled, dim=-1)
-            total_nll += -log_probs[target].item()
+    target_device = logits_seq[0].device
+    log_temp = torch.nn.Parameter(torch.zeros(1, device=target_device))
+    optimizer = torch.optim.LBFGS([log_temp], lr=lr, max_iter=max_iter)
 
-        avg_nll = total_nll / len(val_logits_list)
-        if avg_nll < best_nll:
-            best_nll = avg_nll
-            best_t = float(candidate_t)
+    def closure():
+        optimizer.zero_grad()
+        t = torch.exp(log_temp)
+        loss = torch.zeros(1, device=target_device)
+        for logits, target in zip(logits_seq, targets_seq):
+            l_dev = logits.detach().to(target_device)
+            t_tensor = torch.tensor([target], dtype=torch.long, device=target_device)
+            loss = loss + F.cross_entropy(l_dev.unsqueeze(0) / t, t_tensor)
+        loss = loss / len(logits_seq)
+        loss.backward()
+        return loss
 
-    return round(best_t, 3)
+    optimizer.step(closure)
+    return round(float(torch.exp(log_temp).item()), 4)
 
 
 def fit_isotonic_pava(x_vals, y_vals):
-    """
-    Exact Pool Adjacent Violators Algorithm (PAVA) in pure Python/NumPy for Isotonic Regression.
-    Guarantees monotonically non-decreasing calibrated probability mapping.
-    """
+    """Exact Pool Adjacent Violators Algorithm (PAVA) in pure Python/NumPy for Isotonic Regression."""
     if len(x_vals) < 2:
         return [0.0, 1.0], [0.0, 1.0]
 
@@ -157,8 +184,10 @@ def fit_isotonic_pava(x_vals, y_vals):
     x_sorted = np.array(x_vals, dtype=float)[order]
     y_sorted = np.array(y_vals, dtype=float)[order]
 
-    # Block format: [mean_y, weight, min_x, max_x]
-    blocks = [[float(y_sorted[i]), 1.0, float(x_sorted[i]), float(x_sorted[i])] for i in range(len(y_sorted))]
+    blocks = [
+        [float(y_sorted[i]), 1.0, float(x_sorted[i]), float(x_sorted[i])]
+        for i in range(len(y_sorted))
+    ]
     i = 0
     while i < len(blocks) - 1:
         if blocks[i][0] > blocks[i + 1][0]:
@@ -173,7 +202,6 @@ def fit_isotonic_pava(x_vals, y_vals):
 
     pts_x = [b[2] for b in blocks]
     pts_y = [b[0] for b in blocks]
-    # Ensure boundary anchoring
     if pts_x[0] > 0.0:
         pts_x.insert(0, 0.0)
         pts_y.insert(0, 0.0)
@@ -184,26 +212,32 @@ def fit_isotonic_pava(x_vals, y_vals):
 
 
 def train_laya(
-    train_file: str = "data/train_data.jsonl",
-    val_file: str = "data/val_data.jsonl",
-    output_dir: str = "models/laya-2ndbrain",
-    epochs: int = 4,
+    train_file: Optional[str] = None,
+    val_file: Optional[str] = None,
+    output_dir: Optional[str] = None,
+    epochs: int = 6,
     gamma: float = 2.0,
     lr_head: float = 1e-4,
     lr_encoder: float = 2e-5,
-    device: str = "cpu"
+    device: str = "auto",
 ):
-    print(f"[Train] Initializing base Laya agent ('convaiinnovations/laya' / typed-decisions)...")
+    train_file = train_file or str(REPO_ROOT / "data" / "train_data.jsonl")
+    val_file = val_file or str(REPO_ROOT / "data" / "val_data.jsonl")
+    output_dir = output_dir or str(REPO_ROOT / "models" / "laya-knowledge-base")
+    target_device = resolve_device(device)
+
+    print(
+        f"[Train] Initializing base Laya agent ('convaiinnovations/laya' / typed-decisions) on {target_device}..."
+    )
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        agent = laya.load("convaiinnovations/laya", subfolder="typed-decisions", device=device)
+        agent = laya.load("convaiinnovations/laya", subfolder="typed-decisions", device=target_device)
 
-    # 1. Unfreeze top ModernBERT layers + decision head
-    print("[Train] Freezing base encoder; unfreezing top ModernBERT layers + decision head...")
+    print("[Train] Freezing base encoder; unfreezing top 4 ModernBERT layers + decision head...")
     for param in agent.model.encoder.parameters():
         param.requires_grad = False
 
-    unfrozen_layers = agent.model.encoder.layers[-2:]
+    unfrozen_layers = agent.model.encoder.layers[-4:]
     for layer in unfrozen_layers:
         for param in layer.parameters():
             param.requires_grad = True
@@ -222,15 +256,19 @@ def train_laya(
         param.requires_grad = True
 
     encoder_params = [p for p in agent.model.encoder.parameters() if p.requires_grad]
-    head_params = [p for n, p in agent.model.named_parameters() if not n.startswith("encoder") and p.requires_grad]
+    head_params = [
+        p for n, p in agent.model.named_parameters() if not n.startswith("encoder") and p.requires_grad
+    ]
 
     trainable_count = sum(p.numel() for p in agent.model.parameters() if p.requires_grad)
     print(f"[Train] Trainable Parameters: {trainable_count:,} (Top ModernBERT + Decision Head)")
 
-    optimizer = torch.optim.AdamW([
-        {"params": encoder_params, "lr": lr_encoder, "weight_decay": 0.01},
-        {"params": head_params, "lr": lr_head, "weight_decay": 0.01}
-    ])
+    optimizer = torch.optim.AdamW(
+        [
+            {"params": encoder_params, "lr": lr_encoder, "weight_decay": 0.01},
+            {"params": head_params, "lr": lr_head, "weight_decay": 0.01},
+        ]
+    )
 
     train_samples = load_dataset(train_file)
     val_samples = load_dataset(val_file)
@@ -241,11 +279,17 @@ def train_laya(
     val_items = [prepare_item(agent, s) for s in val_samples]
     val_items = [it for it in val_items if it is not None]
 
-    print(f"[Train] Loaded {len(train_items)} training samples and {len(val_items)} validation samples.")
+    print(
+        f"[Train] Loaded {len(train_items)} training samples and {len(val_items)} validation samples."
+    )
 
     batch_size = 8
+    num_training_steps = epochs * ((len(train_items) + batch_size - 1) // batch_size)
+    num_warmup_steps = int(0.1 * num_training_steps)
+    scheduler = get_cosine_schedule_with_warmup(
+        optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=num_training_steps
+    )
 
-    # 2. Training Loop with Focal Loss (gamma=2.0)
     for epoch in range(1, epochs + 1):
         agent.model.train()
         total_loss = 0.0
@@ -256,10 +300,15 @@ def train_laya(
         shuffled = [train_items[i] for i in perm]
 
         for i in range(0, len(shuffled), batch_size):
-            batch_slice = shuffled[i:i + batch_size]
+            batch_slice = shuffled[i : i + batch_size]
             b = collate_items([[it] for it in batch_slice], agent.tok.pad_token_id)
             if b is None or "target" not in b:
                 continue
+
+            b = {
+                k: (v.to(target_device) if isinstance(v, torch.Tensor) else v)
+                for k, v in b.items()
+            }
 
             optimizer.zero_grad()
             logits, _ = agent.model(
@@ -267,10 +316,9 @@ def train_laya(
                 b["attention_mask"],
                 b["marker_pos"],
                 b["marker_mask"],
-                b["qtype"]
+                b["qtype"],
             )
 
-            # Soft Focal Loss: -(1 - pt)^gamma * log(pt)
             probs = F.softmax(logits, dim=-1)
             pt = (probs * b["target"]).sum(dim=-1).clamp(min=1e-8, max=1.0)
             focal_weight = (1.0 - pt) ** gamma
@@ -279,6 +327,7 @@ def train_laya(
             loss.backward()
             torch.nn.utils.clip_grad_norm_(agent.model.parameters(), 1.0)
             optimizer.step()
+            scheduler.step()
 
             total_loss += loss.item() * len(batch_slice)
             preds = logits.argmax(dim=-1).tolist()
@@ -290,9 +339,10 @@ def train_laya(
 
         avg_loss = total_loss / max(1, total)
         train_acc = (correct / max(1, total)) * 100
-        print(f"[Epoch {epoch}/{epochs}] Focal Loss: {avg_loss:.4f} | Train Acc: {train_acc:.1f}% ({correct}/{total})")
+        print(
+            f"[Epoch {epoch}/{epochs}] Focal Loss: {avg_loss:.4f} | Train Acc: {train_acc:.1f}% ({correct}/{total})"
+        )
 
-    # 3. Validation Evaluation & Per-Task Logging
     agent.model.eval()
     val_correct = 0
     val_total = 0
@@ -300,7 +350,7 @@ def train_laya(
     task_data = {
         "choice": {"logits": [], "targets": [], "confs": [], "preds": []},
         "score": {"logits": [], "targets": [], "confs": [], "preds": []},
-        "noul": {"logits": [], "targets": [], "confs": [], "preds": []}
+        "noul": {"logits": [], "targets": [], "confs": [], "preds": []},
     }
 
     all_confs_uncal = []
@@ -309,16 +359,20 @@ def train_laya(
 
     with torch.no_grad():
         for i in range(0, len(val_items), batch_size):
-            batch_slice = val_items[i:i + batch_size]
+            batch_slice = val_items[i : i + batch_size]
             b = collate_items([[it] for it in batch_slice], agent.tok.pad_token_id)
             if b is None or "target" not in b:
                 continue
+            b = {
+                k: (v.to(target_device) if isinstance(v, torch.Tensor) else v)
+                for k, v in b.items()
+            }
             logits, _ = agent.model(
                 b["input_ids"],
                 b["attention_mask"],
                 b["marker_pos"],
                 b["marker_mask"],
-                b["qtype"]
+                b["qtype"],
             )
             probs = F.softmax(logits, dim=-1)
             preds = logits.argmax(dim=-1).tolist()
@@ -327,7 +381,7 @@ def train_laya(
 
             for row_idx in range(len(batch_slice)):
                 q_type = batch_slice[row_idx]["q_type_name"]
-                task_data[q_type]["logits"].append(logits[row_idx])
+                task_data[q_type]["logits"].append(logits[row_idx].detach().cpu())
                 task_data[q_type]["targets"].append(targets[row_idx])
                 task_data[q_type]["confs"].append(confs[row_idx])
                 task_data[q_type]["preds"].append(preds[row_idx])
@@ -343,12 +397,10 @@ def train_laya(
     overall_acc = (val_correct / max(1, val_total)) * 100
     ece_raw = compute_ece(np.array(all_confs_uncal), np.array(all_preds), np.array(all_targets))
 
-    # 4. Multi-Temperature Vector Calibration
     t_choice = fit_task_temperature(task_data["choice"]["logits"], task_data["choice"]["targets"])
     t_score = fit_task_temperature(task_data["score"]["logits"], task_data["score"]["targets"])
     t_noul = fit_task_temperature(task_data["noul"]["logits"], task_data["noul"]["targets"])
 
-    # Compute Multi-Calibrated ECE
     all_confs_cal = []
     for q_type, t_val in [("choice", t_choice), ("score", t_score), ("noul", t_noul)]:
         for l in task_data[q_type]["logits"]:
@@ -357,35 +409,40 @@ def train_laya(
 
     ece_multi = compute_ece(np.array(all_confs_cal), np.array(all_preds), np.array(all_targets))
 
-    # 5. Isotonic Regression on Noul tasks
-    noul_probs_raw = [F.softmax(l / t_noul, dim=-1)[1].item() for l in task_data["noul"]["logits"]]
-    noul_targets = task_data["noul"]["targets"]
-    pts_x, pts_y = fit_isotonic_pava(noul_probs_raw, noul_targets)
+    all_top1_probs_raw = []
+    all_top1_targets = []
 
-    # Compute Noul ECE after Isotonic calibration
-    noul_calibrated_confs = []
-    noul_preds_iso = []
-    for p in noul_probs_raw:
+    for q_type, t_val in [("choice", t_choice), ("score", t_score), ("noul", t_noul)]:
+        for l, target in zip(task_data[q_type]["logits"], task_data[q_type]["targets"]):
+            scaled_p = F.softmax(l / t_val, dim=-1)
+            max_prob, pred = scaled_p.max(dim=-1)
+            all_top1_probs_raw.append(max_prob.item())
+            all_top1_targets.append(1 if pred.item() == target else 0)
+
+    pts_x, pts_y = fit_isotonic_pava(all_top1_probs_raw, all_top1_targets)
+
+    all_calibrated_confs = []
+    for p in all_top1_probs_raw:
         cal_p = float(np.interp(p, pts_x, pts_y))
-        pred_label = 1 if cal_p >= 0.5 else 0
-        noul_preds_iso.append(pred_label)
-        noul_calibrated_confs.append(max(cal_p, 1.0 - cal_p))
+        all_calibrated_confs.append(cal_p)
 
-    ece_noul_iso = compute_ece(
-        np.array(noul_calibrated_confs),
-        np.array(noul_preds_iso),
-        np.array(noul_targets)
+    ece_pava = compute_ece(
+        np.array(all_calibrated_confs),
+        np.array([1] * len(all_calibrated_confs)),
+        np.array(all_top1_targets),
     )
 
-    print(f"\n================ ULTRA-CALIBRATION RESULTS ================")
+    print("\n================ ULTRA-CALIBRATION RESULTS ================")
     print(f"Overall Accuracy:        {overall_acc:.2f}% ({val_correct}/{val_total})")
     print(f"Raw Model ECE:           {ece_raw:.4f}")
     print(f"Vector Temperatures:     T_choice={t_choice}, T_score={t_score}, T_noul={t_noul}")
-    print(f"Multi-Temperature ECE:   {ece_multi:.4f} (Error reduced by {((ece_raw - ece_multi)/max(1e-5, ece_raw)*100):.1f}%)")
-    print(f"Isotonic Noul ECE:       {ece_noul_iso:.4f}")
-    print(f"==========================================================\n")
+    print(
+        f"Multi-Temperature ECE:   {ece_multi:.4f} "
+        f"(Error reduced by {((ece_raw - ece_multi)/max(1e-5, ece_raw)*100):.1f}%)"
+    )
+    print(f"Isotonic Top-1 PAVA ECE: {ece_pava:.4f}")
+    print("==========================================================\n")
 
-    # 6. Save Checkpoint
     os.makedirs(output_dir, exist_ok=True)
     weights_path = os.path.join(output_dir, "model.safetensors")
     print(f"[Export] Saving fine-tuned weights to {weights_path}...")
@@ -404,26 +461,24 @@ def train_laya(
     if os.path.exists(enc_src) and not os.path.exists(enc_dst):
         shutil.copytree(enc_src, enc_dst)
 
-    # Save vector temperatures
     cfg = dict(agent.cfg)
     cfg["temperature"] = [t_choice, t_score, t_noul]
     cfg["temperature_by_options"] = {
         "choice:2": t_noul,
         "choice:3": t_choice,
         "choice:5": t_score,
-        "choice:11+": t_choice
+        "choice:11+": t_choice,
     }
     cfg["finetuned_domain"] = "2ndBrain_dual_process"
     cfg["val_accuracy"] = round(overall_acc, 2)
     cfg["val_ece"] = round(ece_multi, 4)
-    cfg["val_ece_noul_isotonic"] = round(ece_noul_iso, 4)
+    cfg["val_ece_pava_isotonic"] = round(ece_pava, 4)
 
     cfg_path = os.path.join(output_dir, "rl_agent_config.json")
     with open(cfg_path, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2)
 
-    # Save isotonic breakpoints for Noul
-    iso_path = os.path.join(output_dir, "noul_isotonic.json")
+    iso_path = os.path.join(output_dir, "pava_isotonic.json")
     with open(iso_path, "w", encoding="utf-8") as f:
         json.dump({"x": pts_x, "y": pts_y}, f, indent=2)
 
@@ -437,4 +492,17 @@ if __name__ == "__main__":
             sys.stderr.reconfigure(encoding="utf-8", errors="replace")
         except Exception:
             pass
-    train_laya()
+    parser = argparse.ArgumentParser(description="Train and calibrate Laya System 1 router")
+    parser.add_argument("--train-file", default=None, help="Path to train_data.jsonl")
+    parser.add_argument("--val-file", default=None, help="Path to val_data.jsonl")
+    parser.add_argument("--output-dir", default=None, help="Path to output model directory")
+    parser.add_argument("--epochs", type=int, default=6, help="Number of training epochs")
+    parser.add_argument("--device", default="auto", help="Device: auto, cuda, mps, or cpu")
+    args = parser.parse_args()
+    train_laya(
+        train_file=args.train_file,
+        val_file=args.val_file,
+        output_dir=args.output_dir,
+        epochs=args.epochs,
+        device=args.device,
+    )

@@ -1,119 +1,153 @@
 # 🧠 2ndBrain: Dynamic Local-First Second Brain for LLMs
 
-A local-first, dual-process cognitive second brain that turns code, documents, and live conversation turns into a persistent, queryable knowledge engine.
+A local-first, dual-process cognitive second brain that turns multi-format source materials, technical codebases, and live conversation turns into a persistent, queryable knowledge engine.
 
-- **Laya** (Convai Innovations): Neural System 1 fast reflex engine powered by **ModernBERT-large (421M)**. Evaluates typed decision schemas (`Choice`, `Score`, `Noul`) in a single parallel forward pass in **~35ms** with zero token generation tax. Optimized with **Focal Loss ($\gamma=2.0$)**, **Vector Temperature Calibration**, and **Isotonic Regression** to achieve **86.67% accuracy** and **0.0798 ECE** (outperforming closed-source Jev cloud APIs). Accompanied by a <0.1ms calibrated heuristic fallback.
-- **Code-Review-Graph**: Tree-sitter AST parser and SQLite engine for deterministic call graphs, callers/callees, and Git diff blast radius calculation without model hallucination.
-- **Graphify**: Semantic GraphRAG with community detection (Leiden/Louvain algorithms), god nodes, and cross-document concept clustering.
-- **Obsidian**: Local markdown vault interconnected via bidirectional `[[wikilinks]]`, persistent Architectural Decision Records (ADRs), and self-evolving conversational memory.
-- **Hybrid Search**: Offline 384-d dense vector embeddings (`fastembed` with `BAAI/bge-small-en-v1.5`) fused with BM25 keyword matching via Reciprocal Rank Fusion (RRF) stored in local SQLite.
-- **4-Pillar Persistent Memory**: Categorizes long-term memory into `Tasks`, `Decisions`, `Facts`, and `Skills` in Obsidian markdown notes with schema validation, conflict deduplication, and decay-weighted prompt recall.
+- **System 1 Reflex Engine (`models/laya-knowledge-base`)**: Neural triage engine powered by **ModernBERT-large (421M)**. Evaluates typed decision schemas (`Choice`, `Score`, `Noul`) in a single parallel forward pass in **~35ms** with zero token generation cost. Optimized with **Focal Loss ($\gamma=2.0$)**, **Vector Temperature Calibration**, and **Isotonic Regression**, accompanied by a `<0.1ms` calibrated heuristic fallback.
+- **Structural Code Intelligence (`build/ast/`)**: Tree-sitter AST parser and SQLite engine for deterministic call graphs, callers/callees, import hierarchies, and syntactic blast-radius calculation without model hallucination.
+- **Semantic GraphRAG (`build/graphify-out/`)**: High-level knowledge graph with community detection (Leiden/Louvain algorithms), bridge nodes, and cross-document concept clustering backed by a fast indexed SQLite database (`graph_index.db`).
+- **Markdown Knowledge Vault (`vault/`)**: Local knowledge vault interconnected via bidirectional `[[wikilinks]]`, domain Maps of Content (`-MOC.md`), structured summaries (`-Overview.md`), verbatim source extracts (`-Source.md`), and Architectural Decision Records (ADRs).
+- **Two-Stage Hybrid Search (`vault/00-Meta/vault_vectors.db`)**: Offline 384-d dense vector embeddings (`fastembed` with `BAAI/bge-small-en-v1.5`) fused with BM25 keyword/stem matching via Reciprocal Rank Fusion (RRF) in local SQLite. Two-stage coarse-to-fine candidate selection retrieves grounded parent context in `<1.0s`.
+- **4-Pillar Persistent Memory (`vault/03-Agent-Memory/`)**: Categorizes long-term context into `01-Tasks`, `02-Decisions`, `03-Facts`, and `04-Skills` with schema validation, conflict deduplication, decay-weighted prompt recall, and bidirectional Map of Content navigation.
 
 ---
 
 ## 🔬 Dual-Process Cognitive Architecture
 
 Standard LLMs suffer from three fundamental limitations:
-1. **Context Amnesia**: They forget past instructions, architectural decisions, and user preferences once a conversation turn or session ends.
-2. **Structural Hallucination**: When analyzing complex codebases, they guess call graphs and fail to predict breaking changes accurately.
+1. **Context Amnesia**: Models forget past instructions, architectural decisions, and user preferences once a conversation turn or session ends.
+2. **Structural Hallucination**: When analyzing complex codebases, models guess call graphs and fail to predict breaking changes accurately.
 3. **Token Inefficiency**: Ingesting thousands of lines of documentation or code into context windows is slow, expensive, and dilutes attention.
 
-`2ndBrain` solves this by implementing a **Dual-Process Cognitive Architecture** (inspired by Daniel Kahneman's *Thinking, Fast and Slow*):
-- **System 1 (Laya - Fast Reflex Engine, ~33–45ms)**: Runs locally. Triage, query routing, document novelty gating, blast-radius risk scoring, and memory distillation happen before calling expensive LLMs.
-- **System 2 (Deep Reasoning & Multi-Engine Grounding)**: Combines compiler-grade AST code intelligence, semantic GraphRAG, and a persistent Obsidian markdown vault.
+`2ndBrain` solves these limitations with a **Dual-Process Cognitive Architecture**:
+- **System 1 (Fast Reflex Engine, ~33–45ms)**: Runs locally. Query routing, document novelty gating, blast-radius risk scoring, and memory distillation happen before calling expensive LLMs.
+- **System 2 (Deep Reasoning & Multi-Engine Grounding)**: Combines compiler-grade AST code intelligence, semantic GraphRAG, two-stage vector/keyword search, and a persistent Markdown knowledge vault.
 
 ---
 
 ## 🧱 The 6 Architectural Layers
 
-| Layer | Engine | Implementation & Models | Primary Responsibility |
+| Layer | Engine | Implementation & Storage | Primary Responsibility |
 | :--- | :--- | :--- | :--- |
-| **L0: Fast Reflex** | **Laya** | `models/laya-2ndbrain` (Fine-Tuned ModernBERT-large, 421M) | Evaluates typed questions in a single forward pass without token generation. Routes queries, scores blast risk, gates novelty, and filters conversational memories. Includes a <0.1ms calibrated heuristic fallback and passive Strategy 3 telemetry logging. |
-| **L1: Code Structure** | **Code-Review-Graph** | Tree-sitter parsers + SQLite | Deterministic function call trees, callers/callees, import hierarchies, and syntactic blast radius without model hallucination. |
-| **L2: Semantic Graph** | **Graphify** | Leiden / Louvain GraphRAG | High-level module boundaries, concept clustering, bridge nodes, and cross-document relational graphs. |
-| **L3: Knowledge Vault** | **Obsidian** | Markdown + bidirectional `[[wikilinks]]` | Human-in-the-loop navigation, persistent ADRs, Maps of Content (MOCs), and learned prompt constraints. |
-| **L4: Vector Index** | **Hybrid Search** | Parent-Child Hierarchical Dense (`fastembed` BAAI/bge-small-en-v1.5) + SQLite BM25 | Decomposes notes into Parent Sections and matches on granular Child Chunks (~350 chars) with document & section prefixes. Fuses with BM25 via Reciprocal Rank Fusion (RRF) and injects full, rich parent clauses directly to LLMs. |
-| **L5: Persistent Memory** | **4-Pillar Memory Ontology** | Local-First Obsidian Markdown + Schema Validation | Categorizes long-term context into `01-Tasks`, `02-Decisions`, `03-Facts`, and `04-Skills` with bidirectional `04-Agent-Memory-MOC.md` linking, confidence scoring, conflict deduplication, and decay-weighted prompt recall. |
+| **L0: Fast Reflex** | **Laya** | `models/laya-knowledge-base` (ModernBERT-large, 421M) | Evaluates typed queries in a single forward pass without token generation. Routes queries, scores blast risk, gates novelty, and filters conversational memories. Includes a `<0.1ms` heuristic fallback. |
+| **L1: Code Structure** | **Code-Review-Graph** | `build/ast/` (Tree-sitter AST + SQLite) | Deterministic function call trees, callers/callees, import hierarchies, and syntactic blast radius without model hallucination. Disambiguates overloaded functions in `<15ms`. |
+| **L2: Semantic Graph** | **Graphify** | `build/graphify-out/` (Leiden / Louvain GraphRAG + `graph_index.db`) | Module boundaries, concept clustering, bridge nodes, and cross-document relational graphs queryable in `<1.2s`. |
+| **L3: Knowledge Vault** | **Obsidian** | `vault/` (Markdown + bidirectional `[[wikilinks]]`) | Human-navigable concept notes (`01-Concepts/`), verbatim extracts (`02-Sources/`), master index (`00-Meta/Index.md`), and learned constraints (`03-Agent-Memory/`). |
+| **L4: Vector Index** | **Hybrid Search** | `vault/00-Meta/vault_vectors.db` (`fastembed` BGE + SQLite BM25) | Two-stage coarse-to-fine Parent-Child retrieval fusing dense cosine similarity with BM25 token/stem rankings via Reciprocal Rank Fusion (RRF) in `<1.0s`. |
+| **L5: Persistent Memory** | **4-Pillar Memory Ontology** | `vault/03-Agent-Memory/` (Markdown + YAML Schema Validation) | Categorizes long-term context into `01-Tasks`, `02-Decisions`, `03-Facts`, and `04-Skills` with bidirectional `Agent-Memory-MOC.md` linking, confidence scoring, conflict deduplication, and decay-weighted prompt recall. |
+
+---
+
+## 🗄️ How Knowledge is Stored
+
+Knowledge is organized across **4 storage tiers**:
+
+```mermaid
+flowchart LR
+    subgraph T1["1. Raw Staging (source_materials/)"]
+        SM["Multi-Format Source Documents<br/>Code Repositories, Manuals, Standards, Datasheets"]
+    end
+
+    subgraph T2["2. Obsidian Markdown Vault (vault/)"]
+        direction TB
+        M0["00-Meta/<br/>Index.md + System-Rules.md"]
+        M1["01-Concepts/<br/>{slug}-Overview.md<br/>{slug}-MOC.md"]
+        M2["02-Sources/<br/>{slug}-Source.md (Verbatim)"]
+        M3["03-Agent-Memory/<br/>Tasks | Decisions | Facts | Skills"]
+    end
+
+    subgraph T3["3. Hybrid Vector & FTS DB"]
+        VDB[("vault/00-Meta/vault_vectors.db<br/>Parent-Child Chunks + BM25")]
+    end
+
+    subgraph T4["4. Build & Graph Artifacts (build/)"]
+        MAN["build/.ingest_manifest.json"]
+        AST["build/ast/graph.db<br/>Tree-sitter Call Graph"]
+        GRP["build/graphify-out/graph_index.db<br/>Semantic GraphRAG"]
+    end
+
+    SM -->|"ingest_knowledge.py"| M1
+    SM -->|"ingest_knowledge.py"| M2
+    M1 -->|"vault_linter.py"| M0
+    M1 -->|"hybrid_search.py"| VDB
+    SM -->|"sync_brain.py sync"| AST
+    SM -->|"sync_brain.py sync"| GRP
+    SM -.->|"SHA-256 + mtime + slug"| MAN
+```
+
+### 1. Raw Staging (`source_materials/`)
+Staged source files are grouped by domain or project directories configured in `configs/sources.local.yaml`:
+- Source code repositories (C, C++, Python, JavaScript, TypeScript, Shell, Lua, Julia, MATLAB, Rust, Go).
+- Technical documentation, reference manuals, and API specifications.
+- Standards, specifications, and regulatory guidelines.
+- Academic papers, university lecture notes, and textbook chapters.
+- Configuration schemas, interface definitions, and hardware datasheets.
+
+### 2. Obsidian Markdown Vault (`vault/`)
+Every ingested document generates **3 linked Markdown notes** organized hierarchically, with nested subpaths and MD5 disambiguation preventing collisions:
+- **`01-Concepts/.../{slug}-Overview.md`**: Executive takeaways, high-level summary, document metadata scope, Mermaid architecture diagrams, and normative equations/tables.
+- **`01-Concepts/.../{slug}-MOC.md`**: Map of Content navigation hub linking `{slug}-Overview`, `{slug}-Source`, and `00-Meta/Index`.
+- **`02-Sources/.../{slug}-Source.md`**: Complete verbatim text, clean tables, and code extractions from the source file.
+
+### 3. Incremental Build Manifest (`build/.ingest_manifest.json`)
+Stores `{mtime, size, sha256, slug}` for every ingested source file and tracks slug ownership so incremental builds skip unchanged files in `<0.1ms` and flush manifest updates in batches.
 
 ---
 
 ## 🔄 Lifecycle Flows: How 2ndBrain Works
 
-### Flow 1: Building the Knowledge Base
-
-When you have documents, textbooks, research papers, or codebases and want to assimilate them into the second brain:
+### Flow 1: Building & Updating the Knowledge Base
 
 ```mermaid
 flowchart TD
-    Raw["Raw Materials (PDFs, Docs, Code, Markdown)"] --> Ingest["scripts/ingest_knowledge.py"]
+    Raw["Raw Materials (PDFs, Source Code, Docs, Schemas, Interface Definitions)"] --> Ingest["scripts/ingest_knowledge.py"]
     
-    subgraph Extraction ["1. Ingestion & Preservation"]
-        Ingest --> Detect{"Format Detection"}
-        Detect -->|Digital PDF / Text| Plumber["pdfplumber / pypdf Text Extraction"]
-        Detect -->|Scanned Raster Page| OCR["Offline Neural OCR (RapidOCR + pypdfium2)"]
-        Plumber --> Tables["Table Preservation (| Col | Col |)"]
-        Plumber --> Math["LaTeX Block Formatting ($$...$$)"]
-        OCR --> TextClean["Anti-Boilerplate / Copyright Stripper"]
+    subgraph Extraction ["1. Fast Digital-First Extraction & Preservation"]
+        Ingest --> Cache{"Manifest Check<br/>(mtime + SHA-256 + slug owner)"}
+        Cache -->|Unchanged| Skip["Skip in <0.1ms"]
+        Cache -->|New / Modified| Detect{"Format Detection (25+ Formats)"}
+        Detect -->|Digital PDF| FastFitz["Tier 1: Fast PyMuPDF Digital Text + Table Finder (<0.2s/PDF)"]
+        Detect -->|Complex Vector Tables| Plumber["Tier 2: pdfplumber / pypdf Fallback"]
+        Detect -->|Scanned / Raster PDF| OCR["Tier 3: PyMuPDF Pixmap + RapidOCR (ONNX)"]
+        Detect -->|Source Code & Interfaces| RawDoc["Direct UTF-8 Source & Interface Extractor"]
+        FastFitz & Plumber & OCR & RawDoc --> Clean["Anti-Boilerplate Stripper & LaTeX Formatter ($$...$$)"]
     end
 
-    subgraph Synthesis ["2. Note Synthesis & Linking"]
-        Tables & Math & TextClean --> Synth["Modular Note Generator"]
-        Synth --> Sources["03-Sources/ (Immutable Reference Extracts)"]
-        Synth --> Concepts["01-Concepts/ (Atomic Topic Modular Notes)"]
-        Concepts --> Wikilinks["Bidirectional [[wikilinks]] Synthesizer"]
-        Wikilinks --> MOC["00-Meta/Index.md (Domain Map of Content)"]
+    subgraph Synthesis ["2. Disambiguated Note Synthesis"]
+        Clean --> Synth["Subpath-Disambiguated Slug Generator"]
+        Synth --> Sources["02-Sources/ ({slug}-Source.md)"]
+        Synth --> Concepts["01-Concepts/ ({slug}-Overview.md + {slug}-MOC.md)"]
+        Concepts --> MOC["00-Meta/Index.md & Index.local.md"]
     end
 
-    subgraph Indexing ["3. Hierarchical Vector & Semantic Indexing"]
-        Concepts --> Decompose["Parent-Child Decomposer (scripts/hybrid_search.py)"]
-        Decompose --> Parents["Parent Structural Sections (~2000 chars)"]
-        Decompose --> Children["Context-Prefixed Child Chunks (~350 chars)"]
-        Children --> Embed["fastembed 384-d Dense Vector Generator"]
-        Children --> BM25["SQLite BM25 Token Weight Index"]
-        Embed & BM25 --> RRFDB["vault_vectors.db (SQLite Fusion Database)"]
+    subgraph Indexing ["3. Two-Stage Batched Vector & BM25 Indexing"]
+        Concepts --> BatchEmbed["scripts/hybrid_search.py (Batched Parent-Child Splitter)"]
+        BatchEmbed --> RRFDB[("vault/00-Meta/vault_vectors.db<br/>384-d Dense Vectors + BM25")]
     end
 
-    subgraph GraphTopology ["4. Code AST & Semantic GraphRAG"]
-        Raw --> AST["Code-Review-Graph (Tree-sitter AST Parser)"]
-        AST --> CodeDB[".code-review-graph.db (Call Hierarchy & Callers)"]
-        Raw --> GraphifyEngine["Graphify (Leiden/Louvain Clustering)"]
-        GraphifyEngine --> GraphOut["graphify-out/ (God Nodes & Concept Communities)"]
-    end
-
-    subgraph Audit ["5. Vault Health Quality Gate"]
-        MOC & RRFDB & CodeDB & GraphOut --> Linter["scripts/vault_linter.py"]
-        Linter --> HealthScore["Quantitative Vault Health Score (0-100)"]
-        HealthScore --> AutoFix["Auto-Repair Broken Links & Orphan Attachment"]
+    subgraph Audit ["4. Vault Health Quality Gate"]
+        MOC & RRFDB --> Linter["scripts/vault_linter.py"]
+        Linter --> AutoFix["Auto-Repair Broken Links & Register Unindexed Notes"]
     end
 ```
 
-#### Step-by-Step Execution:
-1. **Drop Source Materials**: Place files into `raw_materials/` (or specify folders in `configs/sources.yaml`).
-2. **Run Master Builder**:
-   ```bash
-   python scripts/build_knowledge_base.py
-   ```
-   * **Table & Equation Preservation**: `pdfplumber` detects tables and translates them into clean GitHub-flavored markdown tables; formulas and mathematical symbols are wrapped in LaTeX display blocks (`$$ ... $$`).
-   * **Local Neural OCR**: If rasterized or scanned pages are detected, local OCR executes automatically via ONNX (`rapidocr-onnxruntime`).
-   * **Anti-Boilerplate Stripper**: Publisher copyrights, ISBN blocks, and cataloging text are stripped before note generation ("No AI Slop" standard).
-3. **Atomic Concept Generation**:
-   * Immutable primary sources are saved in `03-Sources/`.
-   * Modular, focused concept notes are synthesized in `01-Concepts/` with YAML frontmatter.
-   * Entities and cross-references are dynamically wired together with bidirectional `[[wikilinks]]`.
-4. **Parent-Child Vector Embeddings**:
-   * Notes are decomposed into logical Parent Sections and subdivided into granular Child Chunks (~350 characters) prefixed with `Document Title > Section Title`.
-   * Child vectors (384-d `BAAI/bge-small-en-v1.5`) and BM25 tokens are saved to SQLite `vault_vectors.db`.
-5. **GraphRAG & Code AST Compilation**:
-   * Tree-sitter builds the function call graph in `.code-review-graph.db`.
-   * Graphify runs Leiden community detection to extract high-level god nodes and clusters.
-6. **Integrity Audit**:
-   * `vault_linter.py` validates link resolution, frontmatter schemas, and returns a verified 0–100 Vault Health Score.
+#### Common Build Commands:
+```powershell
+# 1. Incremental build (processes only new/modified/missing files from configs/sources.local.yaml)
+python -u scripts/build_knowledge_base.py
+
+# 2. Fast incremental document ingestion only (skip vector indexing and linting)
+python -u scripts/build_knowledge_base.py --skip-index --skip-lint
+
+# 3. Full clean-slate rebuild (re-extracts all files regardless of manifest cache)
+python -u scripts/build_knowledge_base.py --force
+
+# 4. Run Vault Linter & auto-register any unindexed notes into 00-Meta/Index.md
+python -u scripts/sync_brain.py lint --fix
+```
 
 ---
 
 ### Flow 2: When a User Prompts
-
-When an agent, developer, or user issues a question or command:
 
 ```mermaid
 flowchart TD
@@ -133,21 +167,21 @@ flowchart TD
     end
 
     subgraph MemoryRecall ["Active 4-Pillar Memory Recall"]
-        UserPrompt --> Scanner["Scan 04-Agent-Memory/ Active Notes"]
+        UserPrompt --> Scanner["Scan 03-Agent-Memory/ Active Notes"]
         Scanner --> Rank["Rank: Overlap * Decay * (1 + 0.2 * Reinforcements)"]
         Rank --> Badges["Prepend Grounding Badges: [TASK], [DECISION], [FACT], [SKILL]"]
     end
 
     subgraph GroundedExecution ["System 2: Grounded Retrieval"]
-        RouteCRG --> ASTExec["Tree-sitter AST: Deterministic Callers/Callees"]
-        RouteGraph --> GraphExec["Graphify: God Nodes & Leiden Communities"]
-        RouteVault --> HybridExec["Hybrid Search: Dense Vector + BM25 RRF"]
-        HybridExec --> ParentDelivery["Fetch Complete Parent Structural Sections"]
+        RouteCRG --> ASTExec["Tree-sitter AST: Deterministic Callers/Callees (<15ms)"]
+        RouteGraph --> GraphExec["Graphify + SQLite: Communities & 1-Hop Topology (<1.2s)"]
+        RouteVault --> HybridExec["Two-Stage Hybrid Search: Dense Vector + BM25 RRF (<1.0s)"]
+        HybridExec --> ParentDelivery["Fetch Grounded Parent Sections (Max 2 Per Note)"]
     end
 
     subgraph Generation ["LLM Reasoning & Output"]
         Badges & ASTExec & GraphExec & ParentDelivery --> ContextBlock["Assembled Verified Context"]
-        ContextBlock --> LLM["Gen AI Model (Antigravity / Claude / GPT-4o / Gemini / Ollama)"]
+        ContextBlock --> LLM["Gen AI Model (Antigravity / Claude / GPT-4o / Gemini / Local)"]
         LLM --> UserResponse["Hallucination-Free Grounded Response"]
     end
 
@@ -157,167 +191,105 @@ flowchart TD
         CheckExist -->|Reinforce| Inc["Increment reinforcement_count, update timestamp"]
         CheckExist -->|Contradict| Sup["Mark status: superseded, link replacement note"]
         CheckExist -->|Novel| SavePillar["Write to 01-Tasks, 02-Decisions, 03-Facts, or 04-Skills"]
-        SavePillar --> LinkMOC["Link to 04-Agent-Memory-MOC.md (0 Island Notes)"]
+        SavePillar --> LinkMOC["Link to Agent-Memory-MOC.md (0 Island Notes)"]
     end
 ```
-
-#### Step-by-Step Execution:
-1. **Pre-Flight Reflex Triage (Laya, <35ms)**:
-   * **Target Routing**: Laya evaluates the query using its **Choice** primitive and routes it to Tree-sitter AST, Graphify GraphRAG, or Parent-Child Hybrid Search.
-   * **Memory Gating**: Laya's **Noul** primitive detects if the turn establishes an active project preference or rule ($P \ge 0.70$).
-   * **Blast Risk**: If modifying code, the **Score** primitive computes a 0.0–1.0 risk index.
-2. **Active Constraint Injection**:
-   * Scans `04-Agent-Memory/` for non-superseded rules.
-   * Applies recency decay and reinforcement weighting:
-     $$\text{Score} = \text{Semantic Overlap} \times e^{-\lambda \cdot \Delta t} \times (1 + 0.2 \cdot \text{Reinforcements})$$
-   * Injects active constraints directly into the prompt with badges (`[DECISION]`, `[FACT]`, `[SKILL]`, `[TASK]`).
-3. **Deterministic Retrieval**:
-   * Executes the chosen engine without token hallucination.
-   * Hybrid search matches on fine-grained child chunks but delivers **full parent structural sections** so the model receives complete clauses.
-4. **Model Deep Reasoning (System 2)**:
-   * The LLM reasons over verified AST call graphs and grounded parent documentation.
-5. **Post-Flight Memory Distillation & Consolidation**:
-   * If a durable rule was detected, it is crystallized into the appropriate pillar note.
-   * Restated conventions increment `reinforcement_count`; contradictory statements mark older notes `status: superseded`.
-   * Periodic "Sleep Cycle" (`python scripts/sync_brain.py consolidate`) prunes dead rules, merges near-duplicates, and promotes recurring rules into `Project-Guidelines.md`.
 
 ---
 
 ## 🏛️ 4-Pillar Agent Memory Ontology
 
-Standard memory dumps unstructured conversation turns into a flat vector database, resulting in retrieval noise and memory corruption. `2ndBrain` structures long-term memory into four specialized pillars materialized as local Markdown files:
+Long-term conversational memory is structured into four specialized pillars materialized as local Markdown files inside `vault/03-Agent-Memory/`:
 
 ```text
-vault_template/04-Agent-Memory/
+vault/03-Agent-Memory/
 ├── 01-Tasks/                   # Operational backlogs & milestones (status, priority, due_date)
 ├── 02-Decisions/               # Architectural Decision Records (ADRs) (rationale, alternatives)
 ├── 03-Facts/                   # Grounded invariant truths & system specs (confidence: 1.0)
 ├── 04-Skills/                  # Reusable execution procedures & recipes (trigger, steps)
-└── 04-Agent-Memory-MOC.md      # Bidirectional Map of Content (0 island notes)
+├── Archive/                    # Archived / superseded historical notes
+├── Consolidation-Reports/      # Sleep-cycle consolidation audit logs
+├── Sessions/                   # Logged engineering session summaries
+├── Agent-Memory-MOC.md         # Bidirectional Map of Content (0 island notes)
+└── telemetry.jsonl             # Passive System 1 routing & latency telemetry
 ```
 
 | Pillar | Storage Directory | Frontmatter Metadata Schema | Purpose & Examples |
 | :--- | :--- | :--- | :--- |
-| **📋 Tasks** | `04-Agent-Memory/01-Tasks/` | `type: task`, `status: pending\|in_progress\|completed`, `priority: high\|medium\|low`, `due_date: YYYY-MM-DD` | Actionable work items, sprint milestones, and execution checklists. |
-| **⚖️ Decisions** | `04-Agent-Memory/02-Decisions/` | `type: decision`, `status: active\|superseded`, `confidence: 0.95`, `tags: [adr, memory/decision]` | Architectural choices (e.g. CycloneDDS vs FastDDS), evaluated alternatives, and trade-offs. |
-| **📌 Facts** | `04-Agent-Memory/03-Facts/` | `type: fact`, `status: active`, `domain: backend\|systems`, `confidence: 1.0` | Invariant truths, hardware pinouts, baud rates, coordinate frames, and network specs. |
-| **🛠️ Skills** | `04-Agent-Memory/04-Skills/` | `type: skill`, `status: active`, `trigger: "condition"`, `tags: [memory/skill]` | Step-by-step procedural execution patterns, zero-copy recipes, and deployment scripts. |
+| **📋 Tasks** | `03-Agent-Memory/01-Tasks/` | `type: task`, `status: pending\|in_progress\|completed`, `priority: high\|medium\|low`, `milestone: "..."` | Actionable work items, roadmap milestones, and execution checklists. |
+| **⚖️ Decisions** | `03-Agent-Memory/02-Decisions/` | `type: decision`, `status: active\|superseded`, `confidence: 0.95`, `tags: [adr, memory/decision]` | Architectural choices, evaluated alternatives, and trade-offs. |
+| **📌 Facts** | `03-Agent-Memory/03-Facts/` | `type: fact`, `status: active`, `domain: "..."`, `confidence: 1.0` | Invariant truths, system specifications, hardware parameters, and network constraints. |
+| **🛠️ Skills** | `03-Agent-Memory/04-Skills/` | `type: skill`, `status: active`, `trigger: "condition"`, `tags: [memory/skill]` | Step-by-step procedural execution patterns, debugging workflows, and setup recipes. |
 
 ---
 
-## 🔌 Setup Across Different Gen AI Models & Environments
+## 🔌 Cross-Desktop Bootstrap & Setup Across Gen AI Environments
+
+### 0. One-Command Cross-Desktop Bootstrap (Any OS)
+After cloning the repository on any desktop (`Windows`, `macOS`, or `Linux`), run the cross-desktop bootstrapper:
+
+```powershell
+git clone https://github.com/Fabbbbbbb99/2ndBrain.git
+cd 2ndBrain
+pip install -r requirements.txt
+python scripts/bootstrap.py
+```
+
+`bootstrap.py` automatically:
+1. Creates all required `vault/`, `build/`, and `source_materials/` directory scaffolding.
+2. Initializes `configs/sources.local.yaml` and `vault/00-Meta/Index.local.md`.
+3. Reconciles `vault/03-Agent-Memory/Agent-Memory-MOC.md` against local 4-Pillar notes and installs Git pre-commit hooks.
+4. Renders and installs the **`2ndBrain`** skill into `~/.gemini/config/skills/` with your machine's exact repository path.
+5. Generates machine-local MCP configuration files (`configs/claude_desktop_config.local.json` and `configs/cursor_mcp.local.json`).
+6. Verifies `models/laya-knowledge-base/model.safetensors`; if absent on a fresh clone, automatically generates the synthetic dataset and trains the calibrated ModernBERT-large System 1 router on your GPU/MPS/CPU (pass `--skip-laya` to use the `<0.1ms` heuristic engine without training).
+
+---
 
 ### 1. Google Antigravity
-`2ndBrain` includes a native Antigravity skill specification in [`SKILL.md`](SKILL.md).
-
-1. Copy or symlink the repository to your global or local Antigravity skills directory:
-   ```bash
-   # Windows PowerShell
-   Copy-Item -Recurse "2ndBrain" "$env:USERPROFILE\.gemini\config\skills\2ndBrain"
-
-   # Linux / macOS
-   cp -r 2ndBrain ~/.gemini/config/skills/2ndBrain
-   ```
-2. In chat or slash-commands, mention `@2ndBrain`:
-   > *"@2ndBrain What did we decide regarding database connection pooling?"*
-   Antigravity triggers System 1 reflex routing, injects active memory constraints from `04-Agent-Memory/`, and grounds answers in your Obsidian vault.
+`python scripts/bootstrap.py` automatically renders and installs `SKILL.md` (`2ndBrain`) into `~/.gemini/config/skills/`.
 
 ---
 
 ### 2. Claude Desktop & Claude Code (Anthropic)
-`2ndBrain` exposes a high-performance FastMCP server (`scripts/mcp_server.py`) providing 13 native brain tools.
+`2ndBrain` exposes a FastMCP server (`scripts/mcp_server.py`) providing native brain tools:
+- `brain_query(question)`: Intelligent routed query combining System 1 reflex, AST code search, GraphRAG, and Hybrid search with active memory recall.
+- `brain_blast_radius(symbol)`: Tree-sitter AST blast radius and callers calculation.
+- `brain_recall(topic)`: Targeted recall of active 4-Pillar rules and constraints.
+- `brain_remember(rule_or_decision, category)`: Crystallizes learned rules into `01-Tasks`, `02-Decisions`, `03-Facts`, or `04-Skills`.
 
-1. Open your Claude configuration file:
-   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - **Linux**: `~/.config/Claude/claude_desktop_config.json`
-2. Add the `second-brain` MCP server:
+1. Run `python scripts/bootstrap.py` to generate `configs/claude_desktop_config.local.json`.
+2. Copy its `mcpServers.second-brain` block into your Claude configuration file:
    ```json
    {
      "mcpServers": {
        "second-brain": {
          "command": "python",
          "args": [
-           "/absolute/path/to/2ndBrain/scripts/mcp_server.py"
+           "<PATH_TO_REPO>/scripts/mcp_server.py"
          ],
          "env": {
-           "SECOND_BRAIN_VAULT": "/absolute/path/to/2ndBrain/vault_template"
+           "SECOND_BRAIN_VAULT": "<PATH_TO_REPO>/vault",
+           "KNOWLEDGE_BASE_ROOT": "<PATH_TO_REPO>"
          }
        }
      }
    }
    ```
-3. Restart Claude Desktop. Claude now possesses 13 native brain tools:
-   * `brain_query`: Intelligent query routed via Laya reflex.
-   * `brain_blast_radius`: Tree-sitter AST call graph and risk analysis.
-   * `brain_remember_task`: Explicitly registers an actionable item in `01-Tasks/`.
-   * `brain_remember_decision`: Records an ADR in `02-Decisions/`.
-   * `brain_remember_fact`: Stores an invariant truth in `03-Facts/`.
-   * `brain_remember_skill`: Documents a procedural recipe in `04-Skills/`.
-   * `brain_recall`: Fetches active constraints relevant to a topic.
-   * `brain_consolidate_memory`: Executes the "Sleep Cycle" memory pruner.
-   * `brain_sync`, `brain_ingest`, `brain_lint`: Full vault maintenance suite.
 
 ---
 
 ### 3. Cursor IDE & Windsurf
-Connect `2ndBrain` directly into your code editor's agentic loop:
-
-1. Open **Cursor Settings** $\rightarrow$ **Features** $\rightarrow$ **MCP Servers**.
-2. Click **Add New MCP Server**:
-   - **Name**: `second-brain`
-   - **Type**: `command`
-   - **Command**: `python "/absolute/path/to/2ndBrain/scripts/mcp_server.py"`
-3. In Cursor Composer (`Ctrl + I` / `Cmd + I`):
-   > *"@second-brain Check call hierarchy and blast radius before I modify hybrid_search.py"*
+1. Open **Cursor Settings** -> **Features** -> **MCP Servers** (or copy `configs/cursor_mcp.local.json` generated by `bootstrap.py`).
+2. Add command server `second-brain`:
+   ```text
+   python "<PATH_TO_REPO>/scripts/mcp_server.py"
+   ```
 
 ---
 
 ### 4. Python SDK Integration (`scripts/llm_client.py`)
-Use `UniversalBrainAdapter` to wrap API calls with automated pre-flight memory injection and post-flight distillation:
+Use `UniversalBrainAdapter` to wrap API calls with automated pre-flight memory injection and post-flight distillation across OpenAI, Anthropic, Google Gemini (`google-genai`), or local Ollama endpoints:
 
-#### A. OpenAI (GPT-4o / o1 / o3)
-```python
-from scripts.llm_client import UniversalBrainAdapter
-import openai
-
-adapter = UniversalBrainAdapter()
-user_prompt = "Implement rate limiting middleware for public API endpoints."
-
-# 1. Pre-flight: Injects active project decisions & rules as prompt context
-grounded_prompt = adapter.enrich_prompt(user_prompt)
-
-# 2. Call OpenAI with tools
-client = openai.OpenAI()
-response = client.chat.completions.create(
-    model="gpt-4o",
-    messages=[{"role": "user", "content": grounded_prompt}],
-    tools=adapter.get_openai_tools()
-)
-
-# 3. Post-flight: Auto-distill any durable rules established in this turn into Obsidian
-adapter.distill_turn(user_prompt, response.choices[0].message.content or "")
-```
-
-#### B. Anthropic Claude (Claude 3.7 Sonnet / Opus)
-```python
-from scripts.llm_client import UniversalBrainAdapter
-import anthropic
-
-adapter = UniversalBrainAdapter()
-user_prompt = "Refactor token rotation according to our security ADRs."
-
-client = anthropic.Anthropic()
-response = client.messages.create(
-    model="claude-3-7-sonnet-20250219",
-    max_tokens=2048,
-    system=adapter.enrich_prompt("You are a principal systems engineer."),
-    messages=[{"role": "user", "content": user_prompt}],
-    tools=adapter.get_anthropic_tools()
-)
-```
-
-#### C. Google Gemini (`google-genai` SDK)
 ```python
 from scripts.llm_client import UniversalBrainAdapter
 from google import genai
@@ -330,23 +302,7 @@ response = client.models.generate_content(
     model="gemini-2.5-flash",
     contents=user_prompt
 )
-```
-
-#### D. Local Models (Ollama / DeepSeek-R1 / Llama 3 via OpenAI-Compatible Endpoint)
-```python
-from scripts.llm_client import UniversalBrainAdapter
-import openai
-
-# Point to local Ollama, vLLM, or LM Studio endpoint
-client = openai.OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
-adapter = UniversalBrainAdapter()
-
-enriched_prompt = adapter.enrich_prompt("What are our architectural conventions for error handling?")
-response = client.chat.completions.create(
-    model="llama3.1",
-    messages=[{"role": "user", "content": enriched_prompt}]
-)
-print(response.choices[0].message.content)
+adapter.distill_turn(user_prompt, response.text or "")
 ```
 
 ---
@@ -355,111 +311,117 @@ print(response.choices[0].message.content)
 
 The master orchestrator CLI is located at [`scripts/sync_brain.py`](scripts/sync_brain.py):
 
-```bash
-# Universal Execution (Linux / macOS / Windows):
+```powershell
+# 1. Build / incrementally update the entire knowledge base from configs/sources.local.yaml
+python -u scripts/build_knowledge_base.py
 
-# 1. Ingest documents into Obsidian vault (with table & equation preservation)
-python scripts/sync_brain.py ingest --source "path/to/documents"
+# 2. Ingest a single file or directory into the Obsidian vault
+python -u scripts/sync_brain.py ingest --source "path/to/documents"
 
-# 2. Synchronize all graph engines (AST + Graphify + fastembed Vectors + Obsidian)
-python scripts/sync_brain.py sync --target "."
+# 3. Synchronize all graph engines (AST + Graphify + fastembed Vectors + Obsidian)
+python -u scripts/sync_brain.py sync --target "."
 
-# 3. Intelligent query routed by Laya (System 1) with Parent-Child search & active memory recall
-python scripts/sync_brain.py query "How is authentication handled and who calls it?"
+# 4. Intelligent query routed by Laya (System 1) with Hybrid Search & active memory recall
+python -u scripts/sync_brain.py query "Explain the system architecture"
 
-# 4. Compute AST blast radius and callers for a symbol or file
-python scripts/sync_brain.py blast <function_or_class_name>
-python scripts/sync_brain.py blast --file "path/to/module.py"
+# 5. Compute AST blast radius and callers for a symbol or file
+python -u scripts/sync_brain.py blast <function_or_class_name>
+python -u scripts/sync_brain.py blast --file "path/to/module.py"
 
-# 5. Explicitly crystallize a durable memory across pillars (--category: task, decision, fact, skill)
-python scripts/sync_brain.py remember "Always use Pydantic models for validation" --category fact --tag "architecture"
-python scripts/sync_brain.py remember "Adopt CycloneDDS over FastDDS for lower packet loss" --category decision --tag "networking"
-python scripts/sync_brain.py remember "Calibrate sensor extrusion matrix" --category task --tag "sensors"
-python scripts/sync_brain.py remember "Zero-copy shared memory pattern" --category skill --tag "systems"
+# 6. Explicitly crystallize a durable memory across pillars (--category: task, decision, fact, skill)
+python -u scripts/sync_brain.py remember "Use gRPC for inter-service communication" --category decision --tag "architecture"
 
-# 6. Archive a conversation dialogue or meeting into persistent memory
-python scripts/sync_brain.py session --topic "Architecture Review" --summary "Decided on gRPC interfaces." --decisions "Use protobuf v3"
+# 7. Archive a conversation dialogue or meeting into persistent memory
+python -u scripts/sync_brain.py session --topic "Architecture Review" --summary "Decided on microservices interfaces." --decisions "Use protobuf v3"
 
-# 7. Run Memory Consolidation ("Sleep Cycle") to prune, merge, and promote rules
-python scripts/sync_brain.py consolidate
-python scripts/sync_brain.py consolidate --dry-run
+# 8. Run Memory Consolidation ("Sleep Cycle") to prune, merge, and promote rules
+python -u scripts/sync_brain.py consolidate
 
-# 8. Distill durable rules and decisions from a chat transcript
-python scripts/sync_brain.py distill --transcript "path/to/transcript.jsonl"
+# 9. Distill durable rules and decisions from a chat transcript
+python -u scripts/sync_brain.py distill --transcript "path/to/transcript.jsonl"
 
-# 9. Audit vault health, broken wikilinks, and unindexed notes
-python scripts/sync_brain.py lint
-
-# 10. Auto-repair high-confidence broken links and register orphan notes
-python scripts/sync_brain.py lint --fix
+# 10. Audit vault health, broken wikilinks, and auto-register unindexed notes
+python -u scripts/sync_brain.py lint --fix
 
 # 11. Create & manage atomic GSD work-units (Max 45m timebox, binary DOD)
-python scripts/gsd_task.py create "Implement Rate Limiter" --goal "Add Token Bucket middleware" --timebox 30m
-python scripts/gsd_task.py list
-python scripts/gsd_task.py start "implement_rate_limiter"
-python scripts/gsd_task.py done "implement_rate_limiter"
-
-# 12. Run Master Knowledge Base Builder (Auto-discovery or config manifest)
-python scripts/build_knowledge_base.py
+python -u scripts/gsd_task.py create "Implement Rate Limiter" --goal "Add Token Bucket middleware" --timebox 30m
 ```
 
 ---
 
-## 📂 Repository Scaffolding
+## 📂 Repository Scaffolding (Committed Files & Templates)
+
+The repository only tracks clean engine code, configurations, skills, and initial vault scaffolding templates. All local models (`models/`), raw materials (`source_materials/`), compiled databases (`build/`), local tests (`tests/`), local vector DBs (`vault_vectors.db`), and ingested documents are excluded via `.gitignore`:
 
 ```text
 2ndBrain/
-├── SKILL.md                  # Antigravity skill definition (copy to ~/.gemini/config/skills/2ndBrain)
-├── README.md                 # Complete system documentation & capabilities guide
-├── requirements.txt          # Python dependencies (laya, torch, fastembed, FastMCP, pypdf)
-├── .gitignore                # Protects models, databases, caches, and private notes
-├── assets/                   # Architecture diagrams and vector visual assets
-│   ├── architecture.drawio   # Native Draw.io XML architecture source
-│   ├── architecture.drawio.png # Visual graphic embedded in documentation
-│   ├── knowledge_pipeline.drawio # Flow 1: Knowledge ingestion lifecycle topology
-│   └── prompt_flow.drawio    # Flow 2: User prompt processing lifecycle
-├── configs/                  # Client configurations for every major LLM platform
-│   ├── sources.example.yaml  # Ingestion manifest template (copy to sources.local.yaml)
-│   ├── claude_desktop_config.json # Claude Desktop & Claude Code MCP configuration
-│   ├── cursor_mcp.json       # Cursor IDE & Windsurf MCP configuration
-│   ├── CLAUDE.md             # Native developer instructions for Claude Code
-│   ├── .cursorrules          # Project rules for Cursor IDE
-│   └── SYSTEM_PROMPT.md      # Grounding prompt for Web UIs (ChatGPT, Claude.ai, Ollama)
-├── notebooks/
-│   └── train_laya_kaggle.ipynb # Ready-to-run Kaggle 2x T4 DDP notebook for cloud GPU scaling
-├── scripts/
-│   ├── build_knowledge_base.py # Master builder (recursive auto-discovery or config manifest)
-│   ├── laya_router.py        # System 1 Neural Decision Engine (ModernBERT-large 421M + Isotonic Calibration)
-│   ├── generate_laya_dataset.py # 1,600+ sample synthetic dataset generator with borderline ambiguity
-│   ├── train_laya.py         # Advanced Focal Loss & Vector Temperature training pipeline
-│   ├── hybrid_search.py      # Local-First Hybrid Search Engine (Parent-Child Dense + BM25 RRF)
-│   ├── memory_distiller.py   # Conversational Memory Distiller (Decay, Reinforce, Supersede, Archival)
-│   ├── vault_linter.py       # Vault Health & Link Integrity Linter (Quantitative 0-100 Score)
-│   ├── mcp_server.py         # Universal FastMCP Server exposing 13 brain tools (including 4 memory pillars)
-│   ├── llm_client.py         # Universal Python SDK adapter (OpenAI, Anthropic, Gemini, Ollama)
-│   ├── ingest_knowledge.py   # Document Ingestion Engine (Digital PDFs, Tables, Equations, Neural OCR)
-│   ├── gsd_task.py           # GSD Task Engine (Atomic work-units, timeboxing, rollback plans)
-│   ├── install_git_hooks.py  # Installs pre-commit quality gate
-│   ├── pre_commit_hook.py    # Enforces Rule 5 Git isolation and vault integrity before commit
-│   └── sync_brain.py         # Master CLI orchestrator (10 subcommands)
-└── vault_template/           # Obsidian vault scaffolding
-    ├── 00-Meta/              # Index.md (MOC), system rules, and SQLite vector DB
-    ├── 01-Concepts/          # Architecture nodes, specifications, and synthesized concepts
-    ├── 02-Codebase/          # AST module summaries and blast radius reviews
-    ├── 03-Sources/           # Complete source extracts, meeting notes, and literature
-    └── 04-Agent-Memory/      # 4-Pillar agent memory ontology, telemetry logs, session archives, and reports
-        ├── 01-Tasks/         # Actionable work items, sprint backlogs, and status tracking
-        ├── 02-Decisions/     # Architectural Decision Records (ADRs) with trade-offs
-        ├── 03-Facts/         # Invariant truths, system groundings, and specifications
-        ├── 04-Skills/        # Procedural execution recipes and zero-copy code patterns
-        └── 04-Agent-Memory-MOC.md # Bidirectional Map of Content (0 island notes)
+├── SKILL.md                        # Master Antigravity skill definition
+├── README.md                       # System architecture & deployment guide
+├── requirements.txt                # Python environment dependencies
+├── .gitignore                      # Git isolation configuration
+├── configs/                        # Ingestion manifests & client configurations
+│   ├── sources.example.yaml        # Source manifest template
+│   ├── claude_desktop_config.json  # Claude Desktop / Claude Code MCP configuration template
+│   ├── cursor_mcp.json             # Cursor IDE / Windsurf MCP configuration template
+│   ├── CLAUDE.md                   # Agent guidelines for Claude Code
+│   ├── .cursorrules                # System rules for Cursor IDE
+│   ├── SYSTEM_PROMPT.md            # Generic grounding prompt for LLM chat UIs
+│   └── skills/                     # Domain & specialized skill definitions
+│       ├── robbie/
+│       │   └── SKILL.md            # Specialized engineering skill template
+│       └── marie/
+│           └── SKILL.md            # Marine & subsea systems skill template
+├── scripts/                        # Core orchestration, ingestion, search, and memory engines
+│   ├── build_knowledge_base.py     # Master orchestrator builder
+│   ├── ingest_knowledge.py         # Multi-format document & code ingester (25+ formats)
+│   ├── hybrid_search.py            # Two-stage Parent-Child dense vector + BM25 RRF search
+│   ├── sync_brain.py               # Master CLI entrypoint (sync, query, ingest, lint, blast, remember)
+│   ├── laya_router.py              # System 1 reflex decision engine + heuristic fallback
+│   ├── vault_linter.py             # Vault link integrity & markdown quality gate
+│   ├── memory_distiller.py         # 4-Pillar conversational memory distiller
+│   ├── mcp_server.py               # FastMCP server exposing native brain tools
+│   ├── llm_client.py               # Universal LLM client adapter (OpenAI, Anthropic, Gemini, Ollama)
+│   ├── gsd_task.py                 # Timebox & task lifecycle manager
+│   ├── audit_accuracy.py           # Retrieval accuracy & fidelity audit tool
+│   ├── generate_laya_dataset.py    # Synthetic routing dataset generator
+│   ├── train_laya.py               # ModernBERT-large training & temperature calibration pipeline
+│   ├── install_git_hooks.py        # Installs local Git pre-commit hooks
+│   ├── pre_commit_hook.py          # Enforces Rule 5 Git isolation on staged files
+│   └── bootstrap.py                # Cross-desktop setup tool (auto-configures local paths)
+└── vault/                          # Clean Obsidian Markdown Vault Scaffolding
+    ├── .obsidian/                  # Obsidian workspace configuration & graph layout
+    │   ├── app.json
+    │   ├── appearance.json
+    │   ├── core-plugins.json
+    │   └── graph.json
+    ├── 00-Meta/                    # Vault indexes, guidelines, and templates
+    │   ├── Index.md                # Master Map of Content index
+    │   ├── System-Rules.md         # Persistent knowledge base invariants
+    │   └── Templates/
+    │       └── Template-GSD-Task.md
+    ├── 01-Concepts/
+    │   └── README.md               # Concept summaries directory scaffold
+    ├── 02-Sources/
+    │   └── README.md               # Primary extracts directory scaffold
+    └── 03-Agent-Memory/            # 4-Pillar agent memory scaffolding
+        ├── Agent-Memory-MOC.md     # Map of Content linking all memory notes
+        ├── 01-Tasks/
+        │   └── README.md
+        ├── 02-Decisions/
+        │   └── README.md
+        ├── 03-Facts/
+        │   └── README.md
+        ├── 04-Skills/
+        │   └── README.md
+        └── Sessions/
+            └── README.md
 ```
 
 ---
 
 ## 🛡️ Grounding & Integrity Principles
-- **Zero Token Waste**: Fast reflex routing runs via Laya ModernBERT in <45ms without burning API tokens.
-- **No Hallucinated Edges**: Call hierarchies and blast radii are computed deterministically via Tree-sitter AST.
-- **Human Transparency**: Every concept and learned memory is stored in transparent, human-editable Obsidian Markdown notes.
-- **Decay & Conflict Protection**: Stale rules decay over time, and contradictory instructions automatically supersede older records with bidirectional links.
-- **Git Isolation**: The repository tracks framework code, tooling, and scaffolding only; private domain knowledge and personal notes remain local.
+- **Zero Token Waste**: Fast reflex routing runs locally via Laya ModernBERT in `<45ms` without burning API tokens.
+- **Fast Incremental Builds**: `build/.ingest_manifest.json` caches file `mtime`, `size`, `sha256`, and slug ownership so incremental updates skip unchanged files in `<0.1ms` and extract digital PDFs in `<0.2s` via PyMuPDF.
+- **Zero Slug Collisions**: Nested directories and files are disambiguated by relative subpath and MD5 hash fallback.
+- **No Hallucinated Edges**: Call hierarchies and blast radii are computed deterministically via Tree-sitter AST (`build/ast/`).
+- **Human Transparency**: Every concept and learned memory is stored in human-editable Obsidian Markdown notes inside `vault/`.

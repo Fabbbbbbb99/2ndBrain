@@ -18,7 +18,7 @@ GIT_HOOKS_DIR = REPO_ROOT / ".git" / "hooks"
 PRE_COMMIT_DEST = GIT_HOOKS_DIR / "pre-commit"
 
 HOOK_SHELL_SCRIPT = """#!/usr/bin/env bash
-# 2ndBrain Pre-Commit Hook
+# SE_Brain Pre-Commit Hook
 
 # Detect working Python interpreter (avoids Windows Microsoft Store stubs)
 PYTHON_BIN=""
@@ -42,7 +42,9 @@ def install_hook():
         print(f"[Error] .git/hooks directory not found at {GIT_HOOKS_DIR}")
         sys.exit(1)
 
-    PRE_COMMIT_DEST.write_text(HOOK_SHELL_SCRIPT, encoding="utf-8")
+    # Force LF endings: a CRLF shebang breaks Git Bash ("bash\r": No such file)
+    with open(PRE_COMMIT_DEST, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(HOOK_SHELL_SCRIPT.replace("\r\n", "\n"))
     # Make executable on Unix/Git Bash
     st = os.stat(str(PRE_COMMIT_DEST))
     os.chmod(str(PRE_COMMIT_DEST), st.st_mode | stat.S_IEXEC)

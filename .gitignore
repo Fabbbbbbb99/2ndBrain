@@ -1,30 +1,50 @@
-# 2ndBrain Git Ignore Rules
+# =============================================================================
+# SE_Brain Git Ignore Configuration
+# Enforces clean template repository status:
+# 1. No ingested knowledge bases (CRG AST, Graphify, Obsidian sources/concepts, vector DBs)
+# 2. No pre-trained model weights (models/)
+# 3. No generated training data (data/)
+# 4. Only directory scaffolding, README templates, and core tools remain tracked
+# =============================================================================
 
-# Python & Virtual Environments
+# --- Python & Environment Artifacts ---
 __pycache__/
 *.py[cod]
 *$py.class
 .venv/
 venv/
 env/
+.pytest_cache/
+.coverage
+tests/
 
-# Model Weights & Runtime Caches (Laya & Transcriptions)
+# --- 1. Exclude Trained Model Weights & Tokenizers ---
+# Users train their own calibrated Laya models using scripts/train_laya.py
+models/
 *.onnx
 *.bin
 *.pt
 *.safetensors
-models/
 .cache/
 
-# Databases & Runtime Indices
+# --- 2. Exclude Generated Training Data ---
+# Users generate domain-aligned datasets using scripts/generate_laya_dataset.py
+data/
+
+# --- 3. Exclude Ingested Databases, Graphs & Index Caches ---
+# CRG AST, Graphify Semantic GraphRAG, and SQLite vector embeddings
 *.db
 *.sqlite
 *.sqlite3
 .code-review-graph.db
+build/
 graphify-out/
 .graphify_*
 
-# Media Files, Archives & Raw Documents
+# --- 4. Exclude Raw Documents & Media Materials ---
+source_materials/
+raw_materials/
+Knowledge Base Material/
 *.pdf
 *.zip
 *.tar.gz
@@ -34,52 +54,39 @@ graphify-out/
 *.mkv
 *.mov
 raw_audio/
-raw_materials/
-Knowledge Base Material/
 *_extracted.txt
 *_extracted.json
 
-# Secrets & Environment Variables
-.env
-*.pem
-*.key
+# --- 5. Exclude Ingested Obsidian Notes (Preserve Template Scaffolding Only) ---
+# Ignore all ingested concept notes, overview notes, and MOCs
+vault/01-Concepts/*
+!vault/01-Concepts/README.md
 
-# One-off Standards Ingestion & OCR Scripts
-scripts/build_*.py
-scripts/ocr_*.py
-scripts/clone_*.py
-!scripts/ingest_knowledge.py
-!scripts/build_knowledge_base.py
+# Ignore all verbatim primary source extracts
+vault/02-Sources/*
+!vault/02-Sources/README.md
 
-# --- Ignore Ingested Knowledge Base (ISO, INCOSE, ANSI, etc.) ---
-# Preserve directory scaffolding & placeholder READMEs, ignore ingested concept notes
-vault_template/01-Concepts/*/
-!vault_template/01-Concepts/Architecture/
-!vault_template/01-Concepts/Decisions/
-vault_template/01-Concepts/*.md
-vault_template/01-Concepts/*/*.md
-!vault_template/01-Concepts/**/README.md
+# Ignore all dynamic agent session logs & user telemetry (preserve 4-pillar scaffold)
+vault/03-Agent-Memory/*/*
+!vault/03-Agent-Memory/*/README.md
+!vault/03-Agent-Memory/Agent-Memory-MOC.md
+vault/03-Agent-Memory/Archive/
+vault/03-Agent-Memory/Consolidation-Reports/
+vault/03-Agent-Memory/telemetry.jsonl
 
-# Preserve source directory scaffolding, ignore ingested source notes
-vault_template/03-Sources/*/
-!vault_template/03-Sources/Papers/
-!vault_template/03-Sources/Transcripts/
-vault_template/03-Sources/*.md
-vault_template/03-Sources/*/*.md
-!vault_template/03-Sources/**/README.md
-
-# Ignore all dynamic agent memories, preserve directory scaffolding and MOC template
-vault_template/04-Agent-Memory/*/*.md
-!vault_template/04-Agent-Memory/*/README.md
-!vault_template/04-Agent-Memory/04-Agent-Memory-MOC.md
-vault_template/04-Agent-Memory/Archive/
-vault_template/04-Agent-Memory/Consolidation-Reports/
-vault_template/04-Agent-Memory/telemetry.jsonl
-vault_template/00-Meta/*.local.md
+# Ignore dynamic local indices & environment files
+vault/00-Meta/*.local.md
+vault/.obsidian/workspace.json
+vault/.obsidian/workspace-mobile.json
+*.bak
 configs/*.local.yaml
 configs/*.local.json
 user_vault/
-data/
+scratch/
 .*.drawio.bkp
 *.drawio.bkp
-scratch/
+
+# --- 6. Security & Credentials ---
+.env
+*.pem
+*.key

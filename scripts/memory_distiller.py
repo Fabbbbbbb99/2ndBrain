@@ -4,24 +4,23 @@ memory_distiller.py - Conversational & Prompt Memory Distillation for 2ndBrain
 Captures insights, user preferences, corrections, and architectural decisions
 from conversations/prompts, filters them through Laya (System 1), and crystallizes
 them into Obsidian markdown notes with [[wikilinks]].
-
-Includes:
-- Memory Reinforcement (detects duplicate/repeated constraints and increments confidence & usage).
-- Memory Decay (applies exponential half-life decay based on recency and reinforcement).
-- Conflict Resolution & Superseding (detects contradictions/overrides and marks old rules as superseded).
-- Automated Session Dialogue Archival (compacts dialogues into 04-Agent-Memory/Sessions/).
-- Periodic Memory Consolidation / Sleep Cycle (prunes superseded/decayed rules, merges near-duplicates, promotes durable rules to Architecture guidelines).
 """
 
-import os
-import json
-import re
-import math
 import difflib
+import json
+import math
+import os
+import re
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
+
+def _yaml_str(value: Any) -> str:
+    """Returns a double-quoted, escaped single-line YAML scalar."""
+    text = " ".join(str(value or "").split())
+    return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 try:
     from laya_router import router
@@ -32,24 +31,152 @@ except ImportError:
 class ConversationalMemoryDistiller:
     def __init__(self, vault_dir: str):
         self.vault_dir = Path(vault_dir).resolve()
-        self.memory_dir = self.vault_dir / "04-Agent-Memory"
-        # 4-Pillar Structured Ontology (Tasks, Decisions, Facts, Skills)
+        self.memory_dir = self.vault_dir / "03-Agent-Memory"
         self.tasks_dir = self.memory_dir / "01-Tasks"
         self.decisions_dir = self.memory_dir / "02-Decisions"
         self.facts_dir = self.memory_dir / "03-Facts"
         self.skills_dir = self.memory_dir / "04-Skills"
-        # Auxiliary memory directories
         self.sessions_dir = self.memory_dir / "Sessions"
         self.archive_dir = self.memory_dir / "Archive"
         self.reports_dir = self.memory_dir / "Consolidation-Reports"
         self.concepts_decisions_dir = self.vault_dir / "01-Concepts" / "Decisions"
         self.guidelines_dir = self.vault_dir / "01-Concepts" / "Architecture"
 
-        # Ensure all directories exist
-        for d in [self.tasks_dir, self.decisions_dir, self.facts_dir, self.skills_dir,
-                 self.sessions_dir, self.archive_dir, self.reports_dir,
-                 self.concepts_decisions_dir, self.guidelines_dir]:
+        for d in [
+            self.tasks_dir,
+            self.decisions_dir,
+            self.facts_dir,
+            self.skills_dir,
+            self.sessions_dir,
+            self.archive_dir,
+            self.reports_dir,
+        ]:
             d.mkdir(parents=True, exist_ok=True)
+
+    def reconcile_agent_memory_moc(self) -> int:
+        """
+        Scans all 4 Memory Pillars (01-Tasks, 02-Decisions, 03-Facts, 04-Skills)
+        and regenerates Agent-Memory-MOC.md to reflect the actual state on disk.
+        """
+        moc_file = self.memory_dir / "Agent-Memory-MOC.md"
+        pillars = [
+            (
+                "task",
+                "### 1. 📋 [[01-Tasks]]",
+                self.tasks_dir,
+                "*Actionable work items, sprint backlogs, milestone checklists, and execution states.*",
+            ),
+            (
+                "decision",
+                "### 2. ⚖️ [[02-Decisions]]",
+                self.decisions_dir,
+                "*Architectural Decision Records (ADRs), technical trade-offs, and design rationales.*",
+            ),
+            (
+                "fact",
+                "### 3. 📌 [[03-Facts]]",
+                self.facts_dir,
+                "*Permanent system invariants, hardware configurations, and mathematical conventions.*",
+            ),
+            (
+                "skill",
+                "### 4. 🛠️ [[04-Skills]]",
+                self.skills_dir,
+                "*Reusable execution recipes, debugging procedures, and procedural workflows.*",
+            ),
+        ]
+
+        lines = [
+            "---",
+            'title: "Agent Memory Map of Content (MOC)"',
+            "type: moc",
+            "tags:",
+            "  - se-brain/meta",
+            "  - agent-memory",
+            "  - moc",
+            "---",
+            "",
+            "# 🧠 Agent Memory Map of Content (MOC)",
+            "",
+            "Map of Content for the local-first persistent memory engine. Structured across **4 Core Memory Pillars**:",
+            "",
+            "---",
+            "",
+            "## 🏛️ The 4 Memory Pillars",
+            "",
+        ]
+
+        total_registered = 0
+        for p_type, heading, p_dir, desc in pillars:
+            lines.append(heading)
+            lines.append(desc)
+            if p_dir.exists():
+                notes = sorted(
+                    [f for f in p_dir.glob("*.md") if f.name.lower() != "readme.md"],
+                    key=lambda x: x.name,
+                )
+                for note in notes:
+                    meta = self._parse_note_metadata(note)
+                    title = meta.get("title") or note.stem.replace("_", " ").title()
+                    clean_title = re.sub(r'["\'\n\r]', "", str(title)).strip()
+                    lines.append(f"- [[{note.stem}|{clean_title}]]")
+                    total_registered += 1
+            lines.append("")
+
+        lines.extend(
+            [
+                "---",
+                "",
+                "## 📦 Auxiliary Memory Repositories",
+                "- **`Sessions/`**: Compacted historical session transcripts and multi-agent dialogue archives.",
+                "- **`Consolidation-Reports/`**: Audit logs generated during periodic memory consolidation.",
+                "- **`Archive/`**: Superseded and decayed rules preserved for historical reference.",
+                "",
+                "---",
+                "[[00-Meta/Index|Index]] | [[03-Agent-Memory/Agent-Memory-MOC|Agent-Memory-MOC]]",
+                "",
+            ]
+        )
+
+        moc_file.write_text("\n".join(lines), encoding="utf-8")
+        print(
+            f"[Memory Distiller] Reconciled Agent-Memory-MOC.md ({total_registered} active memory notes linked)."
+        )
+        return total_registered
+
+    def _register_in_agent_memory_moc(self, note_path: Path, pillar_type: str, title: str):
+        """Updates Agent-Memory-MOC.md with a wikilink to the new memory note."""
+        moc_file = self.memory_dir / "Agent-Memory-MOC.md"
+        if not moc_file.exists():
+            return
+        try:
+            content = moc_file.read_text(encoding="utf-8")
+            stem = note_path.stem
+            if f"[[{stem}|" in content or f"[[{stem}]]" in content:
+                return
+            clean_title = title.replace('"', "").strip()
+            link_entry = f"- [[{stem}|{clean_title}]]"
+            pillar_markers = {
+                "task": ["### 1. 📋 [[01-Tasks]]", "### 🎯 Active & Completed Tasks"],
+                "decision": ["### 2. ⚖️ [[02-Decisions]]", "### 🏛️ Architectural Decisions (ADRs)"],
+                "fact": ["### 3. 📌 [[03-Facts]]", "### 📌 System & Environment Facts"],
+                "skill": ["### 4. 🛠️ [[04-Skills]]", "### 🛠️ Reusable Skills & Workflows"],
+            }
+            markers = pillar_markers.get(pillar_type.lower(), [])
+            marker = next((m for m in markers if m in content), None)
+            if marker:
+                marker_idx = content.find(marker)
+                next_nl = content.find("\n\n", marker_idx)
+                if next_nl != -1:
+                    new_content = content[:next_nl] + f"\n{link_entry}" + content[next_nl:]
+                else:
+                    new_content = content.replace(marker, f"{marker}\n{link_entry}")
+                moc_file.write_text(new_content, encoding="utf-8")
+                print(f"[Memory Distiller] Auto-updated Agent-Memory-MOC.md with link to {stem}")
+            else:
+                self.reconcile_agent_memory_moc()
+        except Exception as e:
+            print(f"[Memory Distiller] Warning: Could not update Agent-Memory-MOC.md: {e}")
 
     def _parse_note_metadata(self, note_path: Path) -> Dict[str, Any]:
         """Extracts YAML frontmatter, rule statement, and status from a memory note."""
@@ -58,21 +185,22 @@ class ConversationalMemoryDistiller:
         except Exception:
             return {}
 
+        today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         meta: Dict[str, Any] = {
             "path": note_path,
             "status": "active",
             "type": "user_preference",
-            "created": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-            "last_reinforced": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "created": today_str,
+            "last_reinforced": None,
+            "last_verified": None,
             "reinforcement_count": 1,
             "confidence": 0.8,
             "superseded_by": None,
             "supersedes": None,
             "statement": "",
-            "raw_content": content
+            "raw_content": content,
         }
 
-        # Parse YAML frontmatter
         fm_match = re.match(r"^---\s*\n(.*?)\n---\s*\n", content, re.DOTALL)
         if fm_match:
             fm_text = fm_match.group(1)
@@ -80,17 +208,23 @@ class ConversationalMemoryDistiller:
                 if ":" in line and not line.strip().startswith("-"):
                     k, v = line.split(":", 1)
                     k = k.strip().lower()
-                    v = v.strip().strip('"\'')
+                    v = v.strip()
+                    if len(v) >= 2 and v[0] == v[-1] == '"':
+                        v = v[1:-1].replace('\\"', '"').replace("\\\\", "\\")
+                    else:
+                        v = v.strip("\"'")
                     if k == "title":
                         meta["title"] = v
                     elif k == "status":
                         meta["status"] = v.lower()
-                    elif k == "type":
+                    elif k in ("type", "category"):
                         meta["type"] = v
                     elif k == "created":
                         meta["created"] = v
                     elif k == "last_reinforced":
                         meta["last_reinforced"] = v
+                    elif k == "last_verified":
+                        meta["last_verified"] = v
                     elif k == "reinforcement_count":
                         try:
                             meta["reinforcement_count"] = int(v)
@@ -106,7 +240,9 @@ class ConversationalMemoryDistiller:
                     elif k == "supersedes":
                         meta["supersedes"] = v if v != "null" else None
 
-        # Extract statement
+        if not meta["last_reinforced"]:
+            meta["last_reinforced"] = meta["last_verified"] or meta["created"] or today_str
+
         stmt_match = re.search(r"\*\*Statement\*\*:\s*(.*)", content)
         if stmt_match:
             meta["statement"] = stmt_match.group(1).strip()
@@ -117,7 +253,9 @@ class ConversationalMemoryDistiller:
 
         return meta
 
-    def _update_note_frontmatter(self, note_path: Path, updates: Dict[str, Any], append_body_warning: Optional[str] = None):
+    def _update_note_frontmatter(
+        self, note_path: Path, updates: Dict[str, Any], append_body_warning: Optional[str] = None
+    ):
         """Safely updates YAML frontmatter fields in a note."""
         try:
             content = note_path.read_text(encoding="utf-8")
@@ -137,19 +275,24 @@ class ConversationalMemoryDistiller:
                 k = line.split(":", 1)[0].strip().lower()
                 if k in updates:
                     val = updates[k]
-                    val_str = f'"{val}"' if isinstance(val, str) and not val.startswith("[[") else str(val).lower() if isinstance(val, bool) else str(val)
+                    val_str = (
+                        _yaml_str(val)
+                        if isinstance(val, str) and not val.startswith("[[")
+                        else str(val).lower()
+                        if isinstance(val, bool)
+                        else str(val)
+                    )
                     new_fm_lines.append(f"{k}: {val_str}")
                     handled_keys.add(k)
                     continue
             new_fm_lines.append(line)
 
-        # Append any unhandled new keys
         for k, v in updates.items():
             if k not in handled_keys:
-                val_str = f'"{v}"' if isinstance(v, str) and not v.startswith("[[") else str(v)
+                val_str = _yaml_str(v) if isinstance(v, str) and not v.startswith("[[") else str(v)
                 new_fm_lines.append(f"{k}: {val_str}")
 
-        body = content[fm_match.end():]
+        body = content[fm_match.end() :]
         if append_body_warning and append_body_warning not in body:
             body = f"\n{append_body_warning}\n" + body
 
@@ -157,22 +300,26 @@ class ConversationalMemoryDistiller:
         note_path.write_text(new_content, encoding="utf-8")
 
     def _detect_conflict_or_reinforcement(self, new_rule: str, user_msg: str) -> Tuple[Optional[Path], bool]:
-        """
-        Scans existing memory notes.
-        Returns: (matching_note_path, is_reinforcement)
-        """
         all_notes = (
-            list(self.tasks_dir.glob("*.md")) +
-            list(self.decisions_dir.glob("*.md")) +
-            list(self.facts_dir.glob("*.md")) +
-            list(self.skills_dir.glob("*.md")) +
-            list(self.concepts_decisions_dir.glob("*.md"))
+            list(self.tasks_dir.glob("*.md"))
+            + list(self.decisions_dir.glob("*.md"))
+            + list(self.facts_dir.glob("*.md"))
+            + list(self.skills_dir.glob("*.md"))
+            + (list(self.concepts_decisions_dir.glob("*.md")) if self.concepts_decisions_dir.exists() else [])
         )
         new_rule_lower = new_rule.lower()
         user_lower = user_msg.lower()
         new_tokens = set(re.findall(r"\w{3,}", new_rule_lower))
 
-        override_phrases = ["instead of", "from now on", "supersede", "replace", "no longer", "stop using", "prefer"]
+        override_phrases = [
+            "instead of",
+            "from now on",
+            "supersede",
+            "replace",
+            "no longer",
+            "stop using",
+            "prefer",
+        ]
         has_override_intent = any(op in user_lower or op in new_rule_lower for op in override_phrases)
 
         negation_terms = {"never", "not", "dont", "don't", "avoid", "stop", "prohibit", "disallow"}
@@ -192,12 +339,10 @@ class ConversationalMemoryDistiller:
             if not existing_stmt:
                 continue
 
-            # 1. Check for Reinforcement (Exact or high semantic match >= 0.80)
             ratio = difflib.SequenceMatcher(None, new_rule_lower, existing_stmt).ratio()
             if ratio >= 0.80:
-                return p, True  # Reinforce existing
+                return p, True
 
-            # 2. Check for Conflict / Superseding
             exist_tokens = set(re.findall(r"\w{3,}", existing_stmt))
             if not exist_tokens or not new_tokens:
                 continue
@@ -207,50 +352,52 @@ class ConversationalMemoryDistiller:
 
             exist_has_negation = bool(exist_tokens & negation_terms)
             exist_has_affirmative = bool(exist_tokens & affirmative_terms)
-
-            # Polarity flip (e.g. was always, now never) or explicit override on same topic
-            is_polarity_flip = (new_has_negation and exist_has_affirmative) or (new_has_affirmative and exist_has_negation)
+            is_polarity_flip = (new_has_negation and exist_has_affirmative) or (
+                new_has_affirmative and exist_has_negation
+            )
 
             if overlap_ratio >= 0.45 and (is_polarity_flip or has_override_intent):
-                return p, False  # Conflict found! Supersede old note
+                return p, False
 
         return None, False
 
-    def distill_turn(self, user_msg: str, assistant_msg: str, session_id: Optional[str] = None, category: Optional[str] = None) -> Optional[Path]:
-        """
-        Evaluates a single conversation turn. If Laya identifies a durable rule or decision:
-        1. Checks if it reinforces an existing rule.
-        2. Checks if it conflicts with an existing rule.
-        3. Otherwise, writes a new timestamped memory note into Obsidian.
-        """
+    def distill_turn(
+        self,
+        user_msg: str,
+        assistant_msg: str,
+        session_id: Optional[str] = None,
+        category: Optional[str] = None,
+    ) -> Optional[Path]:
         eval_result = router.evaluate_conversational_turn(user_msg, assistant_msg)
-
         if not eval_result["is_durable_memory"]:
-            return None  # Filtered out as transient noise
+            return None
 
         now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         timestamp_str = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         m_type = eval_result["memory_type"]
         rule_text = eval_result["rule_text"] or user_msg.strip()
 
-        # Check for existing match (reinforcement or conflict)
         matched_note, is_reinforce = self._detect_conflict_or_reinforcement(rule_text, user_msg)
-
         if matched_note and is_reinforce:
-            # Reinforce existing note
             meta = self._parse_note_metadata(matched_note)
             new_count = meta.get("reinforcement_count", 1) + 1
             new_conf = min(0.99, meta.get("confidence", 0.8) + 0.05)
-            self._update_note_frontmatter(matched_note, {
-                "last_reinforced": now_str,
-                "reinforcement_count": new_count,
-                "confidence": round(new_conf, 2),
-                "status": "active"
-            }, append_body_warning=f"- **Reinforced on {now_str}**: `{rule_text[:70]}`")
-            print(f"[Memory Distiller] Reinforced active rule: {matched_note.name} (Count: {new_count}, Confidence: {new_conf:.2f})")
+            self._update_note_frontmatter(
+                matched_note,
+                {
+                    "last_reinforced": now_str,
+                    "reinforcement_count": new_count,
+                    "confidence": round(new_conf, 2),
+                    "status": "active",
+                },
+                append_body_warning=f"- **Reinforced on {now_str}**: `{rule_text[:70]}`",
+            )
+            print(
+                f"[Memory Distiller] Reinforced active rule: {matched_note.name} "
+                f"(Count: {new_count}, Confidence: {new_conf:.2f})"
+            )
             return matched_note
 
-        # Create slug for new rule
         clean_words = re.sub(r"[^\w\s-]", "", rule_text.lower()).split()[:5]
         slug = "-".join(clean_words) or f"rule_{timestamp_str}"
         file_name = f"{now_str}_{slug}.md"
@@ -270,32 +417,40 @@ class ConversationalMemoryDistiller:
             m_type = "skill"
         elif m_type in ("architectural_constraint", "decision"):
             target_path = self.decisions_dir / file_name
+            m_type = "decision"
         elif m_type in ("fact", "system_fact"):
             target_path = self.facts_dir / file_name
+            m_type = "fact"
         elif m_type in ("task", "todo"):
             target_path = self.tasks_dir / file_name
+            m_type = "task"
         elif m_type in ("skill", "workflow"):
             target_path = self.skills_dir / file_name
+            m_type = "skill"
         else:
             target_path = self.facts_dir / file_name
             m_type = "fact"
 
         supersedes_ref = None
         if matched_note and not is_reinforce:
-            # Conflict detected: Supersede old note
-            old_meta = self._parse_note_metadata(matched_note)
             supersedes_ref = f"[[{matched_note.stem}]]"
-            self._update_note_frontmatter(matched_note, {
-                "status": "superseded",
-                "superseded_by": f"[[{target_path.stem}]]"
-            }, append_body_warning=f"> [!WARNING] Superseded Rule\n> This rule was superseded on {now_str} by [[{target_path.stem}]].")
+            self._update_note_frontmatter(
+                matched_note,
+                {"status": "superseded", "superseded_by": f"[[{target_path.stem}]]"},
+                append_body_warning=(
+                    f"> [!WARNING] Superseded Rule\n"
+                    f"> This rule was superseded on {now_str} by [[{target_path.stem}]]."
+                ),
+            )
             print(f"[Memory Distiller] Superseded conflicting rule: {matched_note.name} -> [[{target_path.stem}]]")
 
         supersedes_frontmatter = f'supersedes: "{supersedes_ref}"\n' if supersedes_ref else ""
         supersedes_body = f"- **Supersedes**: {supersedes_ref}\n" if supersedes_ref else ""
 
         note_content = f"""---
+title: {_yaml_str(rule_text[:80])}
 type: {m_type}
+category: {m_type}
 status: active
 created: {now_str}
 last_reinforced: {now_str}
@@ -314,33 +469,32 @@ tags:
 > **Statement**: {rule_text}
 
 {supersedes_body}### Context & Origin
-- **Triggering User Prompt**: 
+- **Triggering User Prompt**:
   > {user_msg.strip()}
 - **Model Grounding**:
   {assistant_msg.strip()[:300]}...
 
 ### Linked Concepts
-- [[04-Agent-Memory]]
+- [[03-Agent-Memory/Agent-Memory-MOC|Agent-Memory-MOC]]
 """
         target_path.write_text(note_content, encoding="utf-8")
+        self._register_in_agent_memory_moc(target_path, m_type, rule_text[:60])
         print(f"[Memory Distiller] Crystallized new memory note: {target_path.name}")
         return target_path
 
-
-    # =========================================================================
-    # 4-PILLAR EXPLICIT MEMORY HELPERS
-    # =========================================================================
-    def remember_task(self, title: str, details: str, status: str = "pending", priority: str = "medium", milestone: str = "") -> Path:
-        """Records an actionable task or roadmap milestone in 04-Agent-Memory/01-Tasks/."""
+    def remember_task(
+        self, title: str, details: str, status: str = "pending", priority: str = "medium", milestone: str = ""
+    ) -> Path:
         now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         slug = "-".join(re.sub(r"[^\w\s-]", "", title.lower()).split()[:5]) or "task"
         target_path = self.tasks_dir / f"{now_str}_{slug}.md"
         content = f"""---
-title: "{title}"
+title: {_yaml_str(title)}
 type: task
+category: task
 status: {status}
 priority: {priority}
-milestone: "{milestone}"
+milestone: {_yaml_str(milestone)}
 created: {now_str}
 last_reinforced: {now_str}
 tags:
@@ -360,20 +514,26 @@ tags:
 - [ ] Code implementation complete
 - [ ] Unit tests pass
 - [ ] Documented in project roadmap
+
+---
+*Navigation*: [[03-Agent-Memory/Agent-Memory-MOC|Agent-Memory-MOC]]
 """
         target_path.write_text(content, encoding="utf-8")
+        self._register_in_agent_memory_moc(target_path, "task", title)
         print(f"[Memory Distiller] Recorded task: {target_path.name}")
         return target_path
 
-    def remember_decision(self, title: str, rationale: str, alternatives: Optional[List[str]] = None, impact: str = "") -> Path:
-        """Records an Architectural Decision Record (ADR) in 04-Agent-Memory/02-Decisions/."""
+    def remember_decision(
+        self, title: str, rationale: str, alternatives: Optional[List[str]] = None, impact: str = ""
+    ) -> Path:
         now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         slug = "-".join(re.sub(r"[^\w\s-]", "", title.lower()).split()[:5]) or "decision"
         target_path = self.decisions_dir / f"{now_str}_{slug}.md"
         alt_str = "\n".join(f"- {a}" for a in (alternatives or [])) or "- None considered"
         content = f"""---
-title: "{title}"
+title: {_yaml_str(title)}
 type: decision
+category: decision
 status: active
 created: {now_str}
 last_reinforced: {now_str}
@@ -398,19 +558,23 @@ tags:
 
 ## Impact & Trade-offs
 {impact.strip() or 'Establishes project standard.'}
+
+---
+*Navigation*: [[03-Agent-Memory/Agent-Memory-MOC|Agent-Memory-MOC]]
 """
         target_path.write_text(content, encoding="utf-8")
+        self._register_in_agent_memory_moc(target_path, "decision", title)
         print(f"[Memory Distiller] Recorded decision: {target_path.name}")
         return target_path
 
     def remember_fact(self, statement: str, source: str = "project_grounding", domain: str = "robotics") -> Path:
-        """Records an invariant truth or system configuration in 04-Agent-Memory/03-Facts/."""
         now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         slug = "-".join(re.sub(r"[^\w\s-]", "", statement.lower()).split()[:5]) or "fact"
         target_path = self.facts_dir / f"{now_str}_{slug}.md"
         content = f"""---
-title: "{statement[:80]}"
+title: {_yaml_str(statement[:80])}
 type: fact
+category: fact
 status: active
 domain: {domain}
 created: {now_str}
@@ -426,22 +590,26 @@ tags:
 > [!NOTE] System Invariant
 > **Fact**: {statement}
 > **Domain**: {domain} | **Source**: {source}
+
+---
+*Navigation*: [[03-Agent-Memory/Agent-Memory-MOC|Agent-Memory-MOC]]
 """
         target_path.write_text(content, encoding="utf-8")
+        self._register_in_agent_memory_moc(target_path, "fact", statement[:60])
         print(f"[Memory Distiller] Recorded fact: {target_path.name}")
         return target_path
 
     def remember_skill(self, skill_name: str, steps: List[str], trigger: str = "") -> Path:
-        """Records a learned execution recipe or procedure in 04-Agent-Memory/04-Skills/."""
         now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         slug = "-".join(re.sub(r"[^\w\s-]", "", skill_name.lower()).split()[:5]) or "skill"
         target_path = self.skills_dir / f"{now_str}_{slug}.md"
         steps_str = "\n".join(f"{i+1}. {s}" for i, s in enumerate(steps))
         content = f"""---
-title: "{skill_name}"
+title: {_yaml_str(skill_name)}
 type: skill
+category: skill
 status: active
-trigger: "{trigger}"
+trigger: {_yaml_str(trigger)}
 created: {now_str}
 last_reinforced: {now_str}
 tags:
@@ -456,45 +624,37 @@ tags:
 
 ## Step-by-Step Procedure
 {steps_str}
+
+---
+*Navigation*: [[03-Agent-Memory/Agent-Memory-MOC|Agent-Memory-MOC]]
 """
         target_path.write_text(content, encoding="utf-8")
+        self._register_in_agent_memory_moc(target_path, "skill", skill_name)
         print(f"[Memory Distiller] Recorded skill: {target_path.name}")
         return target_path
 
-    # =========================================================================
-    # IMPROVEMENT 3: Automated Session Dialogue Archival
-    # =========================================================================
     def archive_session(
         self,
         topic: str,
         summary: str,
         dialogue: Optional[List[Dict[str, str]]] = None,
         key_decisions: Optional[List[str]] = None,
-        session_id: Optional[str] = None
+        session_id: Optional[str] = None,
     ) -> Path:
-        """
-        Compacts and archives an entire conversation dialogue into a persistent session note:
-        Stored in: 04-Agent-Memory/Sessions/YYYY-MM-DD_<topic-slug>.md
-        """
         now_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         now_time = datetime.now(timezone.utc).strftime("%H%M%S")
         s_id = session_id or f"sess_{now_date}_{now_time}"
 
-        # Build clean filename slug
-        clean_topic = re.sub(r'[^\w\s-]', '', topic.strip())
-        slug = re.sub(r'[-\s]+', '-', clean_topic.lower())[:45].rstrip('-') or "session"
+        clean_topic = re.sub(r"[^\w\s-]", "", topic.strip())
+        slug = re.sub(r"[-\s]+", "-", clean_topic.lower())[:45].rstrip("-") or "session"
         file_name = f"{now_date}_{slug}.md"
         target_path = self.sessions_dir / file_name
 
-        # Format key decisions list
-        decisions_block = ""
         if key_decisions:
             decisions_block = "\n".join(f"- 📌 **Takeaway**: {d}" for d in key_decisions)
         else:
             decisions_block = "- General discussion and exploration."
 
-        # Format dialogue transcript
-        dialogue_block = ""
         if dialogue:
             formatted_turns = []
             for turn in dialogue:
@@ -520,7 +680,7 @@ tags:
 
 - **Date**: `{now_date}`
 - **Session Identifier**: `{s_id}`
-- **Master Index**: [[00-Meta/Index]]
+- **Master Index**: [[00-Meta/Index|Index]]
 
 ---
 
@@ -540,13 +700,12 @@ tags:
 ---
 
 ## 4. Memory Cross-References
-- [[04-Agent-Memory]]
-- [[04-Agent-Memory/Sessions/README|All Sessions]]
+- [[03-Agent-Memory/Agent-Memory-MOC|Agent-Memory-MOC]]
+- [[03-Agent-Memory/Sessions/README|All Sessions]]
 """
         target_path.write_text(content, encoding="utf-8")
         print(f"[Memory Distiller] Successfully archived session dialogue into: {target_path.name}")
 
-        # Update Sessions README index if present
         readme = self.sessions_dir / "README.md"
         if readme.exists():
             entry = f"- [[{target_path.stem}|{now_date}: {topic}]]"
@@ -554,9 +713,9 @@ tags:
             if target_path.stem not in rm_text:
                 readme.write_text(rm_text.strip() + f"\n{entry}\n", encoding="utf-8")
 
-        # Automatically update vector embeddings for this session note
         try:
             from hybrid_search import HybridSearchEngine
+
             engine = HybridSearchEngine(self.vault_dir)
             engine.index_note(target_path, force=True)
         except Exception:
@@ -564,23 +723,19 @@ tags:
 
         return target_path
 
-    # =========================================================================
-    # IMPROVEMENT 4: Periodic Memory Consolidation ("Sleep Cycle")
-    # =========================================================================
     def consolidate_memories(self, dry_run: bool = False) -> Dict[str, Any]:
-        """
-        Executes the Memory Consolidation ("Sleep Cycle") routine:
-        1. Archives permanently superseded notes and dead/decayed rules into 04-Agent-Memory/Archive/.
-        2. Detects high-reinforcement durable rules (count >= 3) and synthesizes them into
-           permanent Architectural Guidelines (01-Concepts/Architecture/Project-Guidelines.md).
-        3. Identifies and merges near-duplicate rules across active memories.
-        4. Generates a comprehensive consolidation audit report.
-        """
+        """Executes the Memory Consolidation ("Sleep Cycle") routine."""
         now_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         today = datetime.now(timezone.utc).date()
 
         all_notes = [
-            p for p in (list(self.decisions_dir.glob("*.md")) + list(self.facts_dir.glob("*.md")) + list(self.skills_dir.glob("*.md")))
+            p
+            for p in (
+                list(self.tasks_dir.glob("*.md"))
+                + list(self.decisions_dir.glob("*.md"))
+                + list(self.facts_dir.glob("*.md"))
+                + list(self.skills_dir.glob("*.md"))
+            )
             if p.name.lower() not in ("readme.md", "index.md")
         ]
 
@@ -589,7 +744,6 @@ tags:
         merged: List[Dict[str, Any]] = []
         active_remaining: List[Dict[str, Any]] = []
 
-        # 1. Inspect notes for Superseding & Exponential Decay
         for p in all_notes:
             meta = self._parse_note_metadata(p)
             status = meta.get("status", "active")
@@ -604,32 +758,33 @@ tags:
 
             decay_factor = math.exp(-0.05 * delta_days)
 
-            # Rule A: Superseded notes or severely decayed un-reinforced notes
             if status == "superseded" or (delta_days >= 60 and count == 1 and decay_factor < 0.05):
-                archived.append({
-                    "path": p,
-                    "stem": p.stem,
-                    "reason": "superseded" if status == "superseded" else "expired_decay",
-                    "statement": meta.get("statement", p.stem)
-                })
+                archived.append(
+                    {
+                        "path": p,
+                        "stem": p.stem,
+                        "reason": "superseded" if status == "superseded" else "expired_decay",
+                        "statement": meta.get("statement", p.stem),
+                    }
+                )
                 if not dry_run:
                     dest = self.archive_dir / p.name
                     shutil.move(str(p), str(dest))
                 continue
 
-            # Rule B: High-confidence permanent rules eligible for promotion
             if count >= 3 or (conf >= 0.95 and count >= 2):
-                promoted.append({
-                    "path": p,
-                    "stem": p.stem,
-                    "count": count,
-                    "confidence": conf,
-                    "statement": meta.get("statement", p.stem)
-                })
+                promoted.append(
+                    {
+                        "path": p,
+                        "stem": p.stem,
+                        "count": count,
+                        "confidence": conf,
+                        "statement": meta.get("statement", p.stem),
+                    }
+                )
 
             active_remaining.append(meta)
 
-        # 2. Near-Duplicate Merging across remaining active notes
         seen_pairs = set()
         for i in range(len(active_remaining)):
             for j in range(i + 1, len(active_remaining)):
@@ -645,29 +800,38 @@ tags:
                     pair_key = (m1["path"].stem, m2["path"].stem)
                     if pair_key not in seen_pairs:
                         seen_pairs.add(pair_key)
-                        # Keep note with higher reinforcement or older created
-                        keeper, dupe = (m1, m2) if m1.get("reinforcement_count", 1) >= m2.get("reinforcement_count", 1) else (m2, m1)
-                        merged.append({
-                            "keeper": keeper["path"].name,
-                            "duplicate": dupe["path"].name,
-                            "similarity": round(sim * 100, 1)
-                        })
+                        keeper, dupe = (
+                            (m1, m2)
+                            if m1.get("reinforcement_count", 1) >= m2.get("reinforcement_count", 1)
+                            else (m2, m1)
+                        )
+                        merged.append(
+                            {
+                                "keeper": keeper["path"].name,
+                                "duplicate": dupe["path"].name,
+                                "similarity": round(sim * 100, 1),
+                            }
+                        )
                         if not dry_run:
-                            # Merge count into keeper
-                            new_count = keeper.get("reinforcement_count", 1) + dupe.get("reinforcement_count", 1)
-                            self._update_note_frontmatter(keeper["path"], {
-                                "reinforcement_count": new_count,
-                                "last_reinforced": now_date
-                            }, append_body_warning=f"- **Consolidation**: Merged redundant rule `[[{dupe['path'].stem}]]` on {now_date}.")
-                            # Mark dupe as superseded
-                            self._update_note_frontmatter(dupe["path"], {
-                                "status": "superseded",
-                                "superseded_by": f"[[{keeper['path'].stem}]]"
-                            })
+                            new_count = keeper.get("reinforcement_count", 1) + dupe.get(
+                                "reinforcement_count", 1
+                            )
+                            self._update_note_frontmatter(
+                                keeper["path"],
+                                {"reinforcement_count": new_count, "last_reinforced": now_date},
+                                append_body_warning=(
+                                    f"- **Consolidation**: Merged redundant rule "
+                                    f"`[[{dupe['path'].stem}]]` on {now_date}."
+                                ),
+                            )
+                            self._update_note_frontmatter(
+                                dupe["path"],
+                                {"status": "superseded", "superseded_by": f"[[{keeper['path'].stem}]]"},
+                            )
 
-        # 3. Promote Proven Guidelines to 01-Concepts/Architecture/Project-Guidelines.md
         guidelines_path = self.guidelines_dir / "Project-Guidelines.md"
         if promoted and not dry_run:
+            self.guidelines_dir.mkdir(parents=True, exist_ok=True)
             guidelines_content = f"""---
 title: "Project Architectural Guidelines & Permanent Conventions"
 type: concept/architecture
@@ -686,12 +850,17 @@ tags:
 ## Proven Architectural Rules & System Constraints
 """
             for prom in promoted:
-                guidelines_content += f"\n### [[{prom['stem']}]]\n- **Policy**: {prom['statement']}\n- **Confidence**: {prom['confidence']} (Reinforced {prom['count']}x across sessions)\n"
+                guidelines_content += (
+                    f"\n### [[{prom['stem']}]]\n"
+                    f"- **Policy**: {prom['statement']}\n"
+                    f"- **Confidence**: {prom['confidence']} (Reinforced {prom['count']}x across sessions)\n"
+                )
 
-            guidelines_content += f"\n---\n*Linked Meta*: [[00-Meta/Index]]\n"
+            guidelines_content += "\n---\n*Linked Meta*: [[00-Meta/Index|Index]]\n"
             guidelines_path.write_text(guidelines_content, encoding="utf-8")
 
-        # 4. Generate Consolidation Audit Report
+        active_count = max(0, len(active_remaining) - len(merged))
+
         report_path = self.reports_dir / f"{now_date}_Consolidation.md"
         report_md = f"""---
 title: "Memory Consolidation Report - {now_date}"
@@ -711,7 +880,7 @@ dry_run: {str(dry_run).lower()}
 - **Archived / Pruned (Superseded & Decayed)**: {len(archived)}
 - **Promoted to Permanent Guidelines**: {len(promoted)}
 - **Near-Duplicate Pairs Merged**: {len(merged)}
-- **Active Operational Memory Rules Remaining**: {len(active_remaining) - len(archived)}
+- **Active Operational Memory Rules Remaining**: {active_count}
 
 ---
 
@@ -726,7 +895,10 @@ dry_run: {str(dry_run).lower()}
         report_md += "\n## 2. Promoted Guidelines (Durable Rules)\n"
         if promoted:
             for p in promoted:
-                report_md += f"- 🌟 `[[{p['stem']}]]`: {p['statement']} *(Count: {p['count']}x, Conf: {p['confidence']})*\n"
+                report_md += (
+                    f"- 🌟 `[[{p['stem']}]]`: {p['statement']} "
+                    f"*(Count: {p['count']}x, Conf: {p['confidence']})*\n"
+                )
         else:
             report_md += "- No rules currently meet the promotion threshold (reinforcement >= 3).\n"
 
@@ -739,11 +911,10 @@ dry_run: {str(dry_run).lower()}
 
         if not dry_run:
             report_path.write_text(report_md, encoding="utf-8")
-
-        # Re-index vault vectors after consolidation
-        if not dry_run:
+            self.reconcile_agent_memory_moc()
             try:
                 from hybrid_search import HybridSearchEngine
+
                 engine = HybridSearchEngine(self.vault_dir)
                 engine.index_vault(force=False)
             except Exception:
@@ -753,13 +924,12 @@ dry_run: {str(dry_run).lower()}
             "archived_count": len(archived),
             "promoted_count": len(promoted),
             "merged_count": len(merged),
-            "active_count": len(active_remaining) - len(archived),
+            "active_count": active_count,
             "report_path": str(report_path),
-            "dry_run": dry_run
+            "dry_run": dry_run,
         }
 
     def process_transcript_jsonl(self, transcript_path: str, session_id: str = "session") -> int:
-        """Parses an entire conversation transcript (.jsonl) and extracts durable memories."""
         path = Path(transcript_path)
         if not path.exists():
             print(f"[Memory Distiller] Transcript not found: {transcript_path}")
@@ -790,32 +960,23 @@ dry_run: {str(dry_run).lower()}
         return crystallized_count
 
     def recall_relevant_memories(self, prompt: str, max_items: int = 5) -> List[str]:
-        """
-        Searches active memory notes for relevance to the prompt using:
-        1. Status gating: Filters out 'superseded' or 'deprecated' rules.
-        2. Recency half-life decay: exp(-0.05 * days_since_last_reinforced).
-        3. Reinforcement boost: 1.0 + 0.2 * (count - 1).
-        4. Confidence & keyword overlap.
-        """
         prompt_words = set(re.findall(r"\w{3,}", prompt.lower()))
         today = datetime.now(timezone.utc).date()
         scored_memories = []
 
         all_notes = (
-            list(self.tasks_dir.glob("*.md")) +
-            list(self.decisions_dir.glob("*.md")) +
-            list(self.facts_dir.glob("*.md")) +
-            list(self.skills_dir.glob("*.md")) +
-            list(self.concepts_decisions_dir.glob("*.md")) +
-            list(self.sessions_dir.glob("*.md"))
+            list(self.tasks_dir.glob("*.md"))
+            + list(self.decisions_dir.glob("*.md"))
+            + list(self.facts_dir.glob("*.md"))
+            + list(self.skills_dir.glob("*.md"))
+            + (list(self.concepts_decisions_dir.glob("*.md")) if self.concepts_decisions_dir.exists() else [])
+            + list(self.sessions_dir.glob("*.md"))
         )
 
         for p in all_notes:
             if p.name.lower() in ("readme.md", "index.md"):
                 continue
             meta = self._parse_note_metadata(p)
-
-            # Skip superseded or archived rules
             if meta.get("status") in ("superseded", "archived"):
                 continue
 
@@ -824,30 +985,27 @@ dry_run: {str(dry_run).lower()}
             overlap = len(prompt_words.intersection(content_words))
 
             if overlap > 0:
-                # 1. Parse date for decay calculation
                 try:
                     last_date = datetime.strptime(meta.get("last_reinforced", ""), "%Y-%m-%d").date()
                     delta_days = max(0, (today - last_date).days)
                 except Exception:
                     delta_days = 0
 
-                # 2. Compute exponential decay (~14-day half-life: lambda = 0.05)
                 decay_factor = math.exp(-0.05 * delta_days)
-
-                # 3. Compute reinforcement factor
                 count = meta.get("reinforcement_count", 1)
                 reinforce_factor = 1.0 + 0.2 * max(0, count - 1)
-
-                # 4. Confidence
                 confidence = meta.get("confidence", 0.8)
-
-                # Composite weight
                 composite_weight = overlap * confidence * decay_factor * reinforce_factor
 
                 statement = meta.get("statement", p.stem)
                 status_tag = f"[Reinforced {count}x]" if count > 1 else ""
                 m_type_badge = f"[{meta.get('type', 'memory').upper()}]"
-                scored_memories.append((composite_weight, f"- {m_type_badge} [[{p.stem}]] {status_tag}: {statement}".strip()))
+                scored_memories.append(
+                    (composite_weight, f"- {m_type_badge} [[{p.stem}]] {status_tag}: {statement}".strip())
+                )
 
         scored_memories.sort(key=lambda x: x[0], reverse=True)
         return [m[1] for m in scored_memories[:max_items]]
+
+
+MemoryDistiller = ConversationalMemoryDistiller

@@ -25,13 +25,13 @@ When you (an LLM agent such as Claude, Gemini, Antigravity, or Cursor) interact 
 
 ### 3. Honesty & Source Attribution
 - Never invent dependencies or call relations. Ground code relationships in `code-review-graph` AST truth.
-- When citing facts, link to the source document in `03-Sources/Transcripts/` or the specific file path.
+- When citing facts, link to the source document in `02-Sources/Transcripts/` or the specific file path.
 
 ### 4. Memory Persistence
-- When the user gives an explicit preference (e.g. "Always use X", "Never do Y"), crystallize it into `04-Agent-Memory/` immediately.
+- When the user gives an explicit preference (e.g. "Always use X", "Never do Y"), crystallize it into `03-Agent-Memory/` immediately.
 
 ### 5. Git Isolation Rule (Strict Framework Only)
-- NEVER stage or commit domain knowledge notes, ingested materials/sources, or dynamic memory notes (`04-Agent-Memory/*/*.md`) to Git.
+- NEVER stage or commit domain knowledge notes, ingested materials/sources, or dynamic memory notes (`03-Agent-Memory/*/*.md`) to Git.
 - Git strictly tracks the core framework code, engines, CLI scripts, documentation, and directory scaffolding READMEs only.
 - All user knowledge base notes and learned conversational memories are 100% private, sovereign, and local.
 
@@ -49,9 +49,8 @@ When you (an LLM agent such as Claude, Gemini, Antigravity, or Cursor) interact 
 - **Anti-Boilerplate**: Strip publisher metadata, copyright blocks, ISBN dumps, and cataloguing tables from ingested documents. Ban happy-path-only stubs lacking error handling or type definitions.
 
 ### 8. GSD (Get Stuff Done) Work-Unit Specification
-- **Atomic Work-Units**: All tasks under `04-Agent-Memory/01-Tasks/` must define exactly 1 measurable goal and maximum 3–5 discrete checklist items.
+- **Atomic Work-Units**: All tasks under `03-Agent-Memory/01-Tasks/` must define exactly 1 measurable goal and maximum 3–5 discrete checklist items.
 - **Strict Time-Boxing**: Every work-unit must be scoped to $\le 45$ minutes (`timebox: 30m`). Larger tasks must be decomposed into sequential atomic units.
 - **Binary Definition of Done**: Verification criteria must be pass/fail checks (e.g. exit code 0, 0 linter errors) rather than qualitative descriptions.
 - **Mandatory Failure Rollback**: Every task must declare an explicit, executable rollback command (e.g. `git restore <target>`) in case of unexpected failure.
 - **Pre-Commit Enforcement**: The pre-commit quality gate (`scripts/pre_commit_hook.py`) automatically blocks any commit violating Git Isolation or vault health.
-

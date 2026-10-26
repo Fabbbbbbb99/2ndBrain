@@ -25,7 +25,7 @@ tags:
 - [ ] 3. {{STEP_3}}
 
 ### 4. Definition of Done (Binary Verifiable Gates)
-- [ ] Automated verification passes (e.g. `python scripts/vault_linter.py vault_template`)
+- [ ] Automated verification passes (e.g. `python scripts/vault_linter.py vault`)
 - [ ] Target artifact created or updated with 0 broken links and 0 AI slop phrases.
 
 ### 5. Failure Rollback Plan
