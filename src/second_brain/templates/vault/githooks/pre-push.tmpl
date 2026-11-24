@@ -1,0 +1,11 @@
+#!/bin/sh
+# Block accidental push of raw source binaries or local sqlite artifacts.
+
+TRACKED=$(git ls-files)
+[ -z "$TRACKED" ] && exit 0
+
+if printf '%s\n' "$TRACKED" | grep -qiE '^raw/.*\.(pdf|epub|docx|zip)$|\.(sqlite|sqlite3)$'; then
+  echo "BLOCKED: Raw binaries or SQLite files detected in git index. Unstage them before pushing." >&2
+  exit 1
+fi
+exit 0

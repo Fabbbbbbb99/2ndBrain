@@ -1,0 +1,6 @@
+vault_schema_version: "1.0.0"
+ontology_hash: "b822103b7ac0959b1216350a0e377a79e7ef98d8446af9ee738fa28bf0954520"
+parser_version: "1.0.0"
+embed_model_id: "BAAI/bge-small-en-v1.5"
+rerank_model_id: "Xenova/ms-marco-MiniLM-L-6-v2"
+laya_model_id: "convaiinnovations/laya-typed-decisions"

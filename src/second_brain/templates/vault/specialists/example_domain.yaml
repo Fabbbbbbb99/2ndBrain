@@ -1,0 +1,22 @@
+spec_version: "1.0.0"
+domain_id: example_domain
+display_name: Example Domain Specialist
+description: Starter domain specialist template. Rename or duplicate this file for each engineering domain you ingest.
+allowed_domains:
+  - example_domain
+source_versions: []
+token_budget: 2500
+citation_policy: version_pinned_reference
+instructions: |
+  ### Grounding, Tool Binding & Citation Rules
+  - Cite exact source ID, version tag, section heading, and `vault://` URI when referencing indexed documents.
+  - Use MCP server `second-brain` (`brain_query`, `brain_grep`, `brain_get_clause`, `brain_route`, `brain_status`, `brain_remember`, `brain_recall`, `brain_compile`, `brain_cache_visual_repair`).
+  - Expand `truncated: true`, `more_matches_in_chunk`, or multipart clauses via `brain_get_clause`.
+  - On `[STALE]` wiki output, re-read upstream `parsed/` URIs via `brain_get_clause`. On `VISUAL_CROP_REQUIRED`, inspect `crop_path` and call `brain_cache_visual_repair(certify=false)`.
+  - Maintain a `Sources` table in this file (or duplicate per domain under `specialists/<domain_id>.yaml`) after ingesting documents:
+    `| Source ID | Version | Tier | Scope |`
+
+  ### Memory Governance
+  - Call `brain_remember` with `domain="example_domain"` (or your domain ID), `ledger_type` in `{decisions, facts, preferences}`, optional lowercase `project_tag`, and `source_ref`.
+  - Use `brain_recall` to review `active`, `staged`, `superseded`, or `rejected` memory entries; approve staged entries via `brain certify --id <id> --decision approve`.
+  - Call `brain_compile` only on explicit user request.

@@ -1,0 +1,17 @@
+#!/bin/sh
+# Block pushing tracked raw source materials, local state, binaries, or sensitive files.
+
+TRACKED=$(git ls-files)
+[ -z "$TRACKED" ] && exit 0
+
+BAD_DIRS=$(printf '%s\n' "$TRACKED" | grep -E '^(raw|vault|user_vault|state|models|configs/generated)/' || true)
+BAD_NAMES=$(printf '%s\n' "$TRACKED" | grep -E '^(config\.toml|requirements\.lock|handover\.md)$' || true)
+BAD_EXTS=$(printf '%s\n' "$TRACKED" | grep -iE '\.(pdf|epub|docx|zip|sqlite|sqlite3|db|onnx|safetensors|bin|pt|pem|key)$' || true)
+
+if [ -n "$BAD_DIRS$BAD_NAMES$BAD_EXTS" ]; then
+  echo "BLOCKED: Sensitive, binary, or local-state files tracked in repository index:" >&2
+  printf '%s\n' "$BAD_DIRS" "$BAD_NAMES" "$BAD_EXTS" | grep -v '^$' >&2
+  exit 1
+fi
+
+exit 0

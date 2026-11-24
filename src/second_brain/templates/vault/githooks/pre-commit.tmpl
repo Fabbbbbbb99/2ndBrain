@@ -1,0 +1,11 @@
+#!/bin/sh
+# Block accidental commit of raw source materials, local sqlite state, or volatile Obsidian workspace files.
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$STAGED" ] && exit 0
+
+if printf '%s\n' "$STAGED" | grep -qiE '^raw/|\.(pdf|epub|docx|zip|sqlite|sqlite3)$|^\.obsidian/workspace.*\.json$'; then
+  echo "BLOCKED: Raw documents, SQLite databases, or Obsidian workspace files staged. Unstage before committing." >&2
+  exit 1
+fi
+exit 0

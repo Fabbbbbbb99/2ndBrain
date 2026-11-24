@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=75.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "second-brain"
+version = "0.1.0"
+description = "Local offline-first federated engineering knowledge base, persistent memory, and specialist router"
+requires-python = ">=3.13"
+classifiers = [
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "pywin32>=308",
+    "numpy>=2.0.0",
+    "pillow>=10.0.0",
+    "onnxruntime>=1.20.0",
+    "fastembed>=0.8.0",
+    "sqlite-vec>=0.1.6",
+    "tokenizers>=0.20.0",
+    "tiktoken>=0.8.0",
+    "mcp>=2.0.0,<3",
+    "pypdfium2>=4.30.0",
+    "pdfplumber>=0.11.4",
+    "rapidocr-onnxruntime>=1.2.0",
+    "docutils>=0.21.2",
+    "markdown-it-py>=3.0.0",
+    "pyyaml>=6.0.2",
+    "python-frontmatter>=1.1.0",
+    "pydantic>=2.10.0",
+    "huggingface-hub>=0.26.0",
+    "psutil>=6.0.0",
+    "regex>=2024.11.6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+]
+ingest-docling = [
+    "docling>=2.15.0",
+]
+
+[project.scripts]
+brain = "second_brain.shims.cli:main"
+brain-mcp = "second_brain.shims.mcp_proxy:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"second_brain" = ["templates/**/*"]

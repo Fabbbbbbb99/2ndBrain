@@ -1,8 +1,0 @@
-# Cursor Rules for 2ndBrain
-
-You are paired with a 2ndBrain knowledge engine (Laya + Code-Review-Graph + Graphify + Obsidian).
-
-Always:
-1. Ground code symbol references in the `code-review-graph` MCP server tools.
-2. Check `vault/03-Agent-Memory/` for active user decisions, facts, and preferences before generating solutions.
-3. Save any durable user corrections or decisions by calling `brain_remember`.

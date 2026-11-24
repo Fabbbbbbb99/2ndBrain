@@ -1,0 +1,27 @@
+schema_version: "1.0.0"
+taxonomy_version: "1.0.0"
+
+edge_types:
+  - name: CITES
+    provenance: [EXTRACTED]
+    description: Explicit standard clause, paper, or document citation.
+  - name: PART_OF
+    provenance: [EXTRACTED]
+    description: Hierarchical containment inside a standard, chapter, or module.
+  - name: SUPERSEDES
+    provenance: [EXTRACTED]
+    description: Newer memory record or standard revision replaces an older record.
+  - name: CONFLICTS_WITH
+    provenance: [EXTRACTED, INFERRED]
+    description: Contradictory engineering requirement, parameter, or memory claim.
+  - name: APPLIES_TO
+    provenance: [EXTRACTED]
+    description: Scope constraint binding a rule or pattern to a platform or version.
+  - name: INFERRED_RELATED
+    provenance: [INFERRED]
+    description: Semantic link discovered outside explicit source citations.
+
+domains:
+  example_domain:
+    display_name: Example Domain
+    aliases: [specification, requirement, architecture, interface, guideline]

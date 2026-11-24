@@ -1,0 +1,23 @@
+#!/bin/sh
+# Block accidental commit of raw source materials, local state, binaries, or user home paths.
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$STAGED" ] && exit 0
+
+BAD_DIRS=$(printf '%s\n' "$STAGED" | grep -E '^(raw|vault|user_vault|state|models|configs/generated)/' || true)
+BAD_NAMES=$(printf '%s\n' "$STAGED" | grep -E '^(config\.toml|requirements\.lock|handover\.md)$' || true)
+BAD_EXTS=$(printf '%s\n' "$STAGED" | grep -iE '\.(pdf|epub|docx|zip|sqlite|sqlite3|db|onnx|safetensors|bin|pt|pem|key)$' || true)
+
+if [ -n "$BAD_DIRS$BAD_NAMES$BAD_EXTS" ]; then
+  echo "BLOCKED: Sensitive, binary, or local-state files staged for commit:" >&2
+  printf '%s\n' "$BAD_DIRS" "$BAD_NAMES" "$BAD_EXTS" | grep -v '^$' >&2
+  exit 1
+fi
+
+HOME_PATH_RE='[A-Za-z]:[\\/]U''sers[\\/]'
+if git diff --cached -U0 -- . ':(exclude).githooks/' | grep -E '^\+[^+]' | grep -qE "$HOME_PATH_RE"; then
+  echo "BLOCKED: Hardcoded local user directory path detected in staged diff." >&2
+  exit 1
+fi
+
+exit 0

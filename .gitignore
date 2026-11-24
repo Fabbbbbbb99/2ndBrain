@@ -1,92 +1,62 @@
-# =============================================================================
-# SE_Brain Git Ignore Configuration
-# Enforces clean template repository status:
-# 1. No ingested knowledge bases (CRG AST, Graphify, Obsidian sources/concepts, vector DBs)
-# 2. No pre-trained model weights (models/)
-# 3. No generated training data (data/)
-# 4. Only directory scaffolding, README templates, and core tools remain tracked
-# =============================================================================
-
-# --- Python & Environment Artifacts ---
-__pycache__/
-*.py[cod]
-*$py.class
+# --- Python & Build Artifacts ---
 .venv/
 venv/
 env/
+__pycache__/
+*.py[cod]
+*.egg-info/
 .pytest_cache/
 .coverage
-tests/
+build/
+dist/
+requirements.lock
 
-# --- 1. Exclude Trained Model Weights & Tokenizers ---
-# Users train their own calibrated Laya models using scripts/train_laya.py
+# --- Runtime State, Databases & Model Weights ---
+state/
 models/
+parsed/
+crops/
+logs/
+*.log
+*.sqlite*
+*.db
 *.onnx
 *.bin
 *.pt
 *.safetensors
-.cache/
+daemon.lock
+graph.html
+model_pointer.json
 
-# --- 2. Exclude Generated Training Data ---
-# Users generate domain-aligned datasets using scripts/generate_laya_dataset.py
-data/
-
-# --- 3. Exclude Ingested Databases, Graphs & Index Caches ---
-# CRG AST, Graphify Semantic GraphRAG, and SQLite vector embeddings
-*.db
-*.sqlite
-*.sqlite3
-.code-review-graph.db
-build/
-graphify-out/
-.graphify_*
-
-# --- 4. Exclude Raw Documents & Media Materials ---
-source_materials/
-raw_materials/
-Knowledge Base Material/
+# --- Raw Materials & Vault Isolation ---
+raw/
+/vault/
+/user_vault/
+!/src/second_brain/templates/vault/
 *.pdf
+*.epub
+*.docx
 *.zip
 *.tar.gz
-*.mp4
 *.mp3
+*.mp4
 *.wav
-*.mkv
-*.mov
-raw_audio/
-*_extracted.txt
-*_extracted.json
 
-# --- 5. Exclude Ingested Obsidian Notes (Preserve Template Scaffolding Only) ---
-# Ignore all ingested concept notes, overview notes, and MOCs
-vault/01-Concepts/*
-!vault/01-Concepts/README.md
+# --- Obsidian Volatile State ---
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
 
-# Ignore all verbatim primary source extracts
-vault/02-Sources/*
-!vault/02-Sources/README.md
-
-# Ignore all dynamic agent session logs & user telemetry (preserve 4-pillar scaffold)
-vault/03-Agent-Memory/*/*
-!vault/03-Agent-Memory/*/README.md
-!vault/03-Agent-Memory/Agent-Memory-MOC.md
-vault/03-Agent-Memory/Archive/
-vault/03-Agent-Memory/Consolidation-Reports/
-vault/03-Agent-Memory/telemetry.jsonl
-
-# Ignore dynamic local indices & environment files
-vault/00-Meta/*.local.md
-vault/.obsidian/workspace.json
-vault/.obsidian/workspace-mobile.json
-*.bak
-configs/*.local.yaml
-configs/*.local.json
-user_vault/
-scratch/
-.*.drawio.bkp
-*.drawio.bkp
-
-# --- 6. Security & Credentials ---
+# --- Local Config, Secrets & Dev Scratch ---
+config.toml
+configs/generated/
+*.local.*
 .env
 *.pem
 *.key
+handover.md
+tests/
+benchmarks/
+data/
+*.tmp
+*.bak

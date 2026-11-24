@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "second-brain": {
+      "command": "<PATH_TO_REPO>\\.venv\\Scripts\\brain-mcp.exe",
+      "args": [],
+      "env": {
+        "BRAIN_CONFIG_PATH": "<PATH_TO_CONFIG_TOML>"
+      }
+    }
+  }
+}

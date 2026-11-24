@@ -1,0 +1,12 @@
+# 2ndBrain Configuration Template (Generated automatically by scripts/setup.py or `brain init`)
+vault_path = "<PATH_TO_VAULT>"
+state_dir = "<PATH_TO_STATE>"
+allow_laya_auto_commit = false
+max_fanout_domains = 2
+pack_token_budget = 2500
+fanout_token_budget = 12000
+intra_op_num_threads = 4
+inter_op_num_threads = 1
+enable_cpu_mem_arena = false
+warm_cascade_p95_budget_ms = 1350
+daemon_idle_ttl_seconds = 1800
